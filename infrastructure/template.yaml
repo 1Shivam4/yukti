@@ -1,0 +1,274 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Yukti - AI Resume Builder API
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        NODE_ENV: production
+        DATABASE_URL: !Ref DatabaseUrl
+        COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
+        COGNITO_CLIENT_ID: !Ref CognitoClientId
+        AWS_COGNITO_REGION: !Ref AWS::Region
+        GEMINI_API_KEY: !Ref GeminiApiKey
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+  DatabaseUrl:
+    Type: String
+    NoEcho: true
+    Description: PostgreSQL connection string
+  CognitoUserPoolId:
+    Type: String
+    Description: Cognito User Pool ID
+  CognitoClientId:
+    Type: String
+    Description: Cognito App Client ID
+  GeminiApiKey:
+    Type: String
+    NoEcho: true
+    Description: Google Gemini API Key
+
+Resources:
+  # API Gateway
+  YuktiApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Requested-With
+
+  # Auth Function
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub yukti-auth-${Stage}
+      CodeUri: apps/api/dist/
+      Handler: auth.handler
+      Events:
+        CognitoWebhook:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/auth/cognito-webhook
+            Method: POST
+
+  # Resumes Function
+  ResumesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub yukti-resumes-${Stage}
+      CodeUri: apps/api/dist/
+      Handler: resumes.handler
+      Events:
+        GetResumes:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/resumes
+            Method: GET
+        CreateResume:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/resumes
+            Method: POST
+        GetResume:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/resumes/{id}
+            Method: GET
+        UpdateResume:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/resumes/{id}
+            Method: PUT
+        DeleteResume:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/resumes/{id}
+            Method: DELETE
+
+  # AI Function
+  AIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub yukti-ai-${Stage}
+      CodeUri: apps/api/dist/
+      Handler: ai.handler
+      Timeout: 60
+      MemorySize: 1024
+      Events:
+        Generate:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/ai/generate
+            Method: POST
+        Improve:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/ai/improve
+            Method: POST
+        Analyze:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/ai/analyze
+            Method: POST
+
+  # Render Function
+  RenderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub yukti-render-${Stage}
+      CodeUri: apps/api/dist/
+      Handler: render.handler
+      Events:
+        RenderPdf:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/render/{id}/pdf
+            Method: GET
+        RenderJson:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref YuktiApi
+            Path: /api/render/{id}/json
+            Method: GET
+
+  # S3 Bucket for Frontend
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub yukti-frontend-${Stage}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: 404.html
+
+  # CloudFront Origin Access Identity
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub "OAI for Yukti ${Stage}"
+
+  # S3 Bucket Policy
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOAI.S3CanonicalUserId
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOAI}
+          - Id: ApiOrigin
+            DomainName: !Sub ${YuktiApi}.execute-api.${AWS::Region}.amazonaws.com
+            CustomOriginConfig:
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false
+        CacheBehaviors:
+          - PathPattern: /api/*
+            TargetOriginId: ApiOrigin
+            ViewerProtocolPolicy: https-only
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            ForwardedValues:
+              QueryString: true
+              Headers:
+                - Authorization
+                - Content-Type
+            DefaultTTL: 0
+            MinTTL: 0
+            MaxTTL: 0
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        PriceClass: PriceClass_100
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL
+    Value: !Sub https://${YuktiApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+
+  FrontendBucket:
+    Description: S3 bucket for frontend
+    Value: !Ref FrontendBucket
+
+  CloudFrontUrl:
+    Description: CloudFront distribution URL
+    Value: !Sub https://${CloudFrontDistribution.DomainName}
+
+  CloudFrontDistributionId:
+    Description: CloudFront distribution ID
+    Value: !Ref CloudFrontDistribution

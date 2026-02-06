@@ -1,0 +1,45 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - npm install -g bun
+      - bun install
+
+  build:
+    commands:
+      - echo "Building API..."
+      - bun run build --filter=@yukti/api
+      - echo "Building Web..."
+      - bun run build --filter=@yukti/web
+
+  post_build:
+    commands:
+      - echo "Packaging SAM application..."
+      - sam package --template-file infrastructure/template.yaml --s3-bucket ${SAM_BUCKET} --output-template-file packaged.yaml
+      - echo "Deploying SAM application..."
+      - |
+        sam deploy \
+          --template-file packaged.yaml \
+          --stack-name yukti-${STAGE} \
+          --capabilities CAPABILITY_IAM \
+          --parameter-overrides \
+            Stage=${STAGE} \
+            DatabaseUrl=${DATABASE_URL} \
+            CognitoUserPoolId=${COGNITO_USER_POOL_ID} \
+            CognitoClientId=${COGNITO_CLIENT_ID} \
+            GeminiApiKey=${GEMINI_API_KEY} \
+          --no-fail-on-empty-changeset
+      - echo "Syncing frontend to S3..."
+      - aws s3 sync apps/web/.next/static s3://yukti-frontend-${STAGE}-${AWS_ACCOUNT_ID}/_next/static --delete
+      - aws s3 sync apps/web/out s3://yukti-frontend-${STAGE}-${AWS_ACCOUNT_ID} --delete
+      - echo "Invalidating CloudFront cache..."
+      - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths "/*"
+
+artifacts:
+  files:
+    - packaged.yaml
+    - apps/api/dist/**/*
+    - apps/web/.next/**/*

@@ -1,0 +1,144 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Deployment stage"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  AWS_REGION: ap-south-1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      api-hash: ${{ steps.api-hash.outputs.hash }}
+      web-hash: ${{ steps.web-hash.outputs.hash }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build packages
+        run: bun run build
+
+      - name: Upload API artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-dist
+          path: apps/api/dist/
+
+      - name: Upload Web artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-out
+          path: apps/web/.next/
+
+  deploy-api:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.stage || 'prod' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download API artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: api-dist
+          path: apps/api/dist/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup SAM
+        uses: aws-actions/setup-sam@v2
+
+      - name: SAM Build
+        run: sam build --template-file infrastructure/template.yaml
+
+      - name: SAM Deploy
+        run: |
+          sam deploy \
+            --stack-name yukti-${{ github.event.inputs.stage || 'prod' }} \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides \
+              Stage=${{ github.event.inputs.stage || 'prod' }} \
+              DatabaseUrl=${{ secrets.DATABASE_URL }} \
+              CognitoUserPoolId=${{ secrets.COGNITO_USER_POOL_ID }} \
+              CognitoClientId=${{ secrets.COGNITO_CLIENT_ID }} \
+              GeminiApiKey=${{ secrets.GEMINI_API_KEY }} \
+            --no-fail-on-empty-changeset \
+            --resolve-s3
+
+  deploy-web:
+    needs: [build, deploy-api]
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.stage || 'prod' }}
+
+    steps:
+      - name: Download Web artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-out
+          path: apps/web/.next/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get CloudFormation outputs
+        id: cfn-outputs
+        run: |
+          BUCKET=$(aws cloudformation describe-stacks \
+            --stack-name yukti-${{ github.event.inputs.stage || 'prod' }} \
+            --query "Stacks[0].Outputs[?OutputKey=='FrontendBucket'].OutputValue" \
+            --output text)
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name yukti-${{ github.event.inputs.stage || 'prod' }} \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
+            --output text)
+          echo "bucket=$BUCKET" >> $GITHUB_OUTPUT
+          echo "distribution=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync apps/web/.next/static s3://${{ steps.cfn-outputs.outputs.bucket }}/_next/static --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.cfn-outputs.outputs.distribution }} \
+            --paths "/*"
+
+      - name: Output URLs
+        run: |
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name yukti-${{ github.event.inputs.stage || 'prod' }} \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontUrl'].OutputValue" \
+            --output text)
+          echo "🚀 Deployed to: $URL"
