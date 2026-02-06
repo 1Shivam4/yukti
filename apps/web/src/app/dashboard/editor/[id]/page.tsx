@@ -8,6 +8,7 @@ import apiClient from "@/lib/api-client";
 import BasicsForm from "@/components/editor/BasicsForm";
 import WorkForm from "@/components/editor/WorkForm";
 import ResumePreview from "@/components/editor/ResumePreview";
+import AIPanel from "@/components/editor/AIPanel";
 import {
   ArrowLeft,
   Save,
@@ -29,6 +30,7 @@ export default function EditorPage() {
     useResumeStore();
   const [activeTab, setActiveTab] = useState<EditorTab>("basics");
   const [title, setTitle] = useState("");
+  const [showAIPanel, setShowAIPanel] = useState(false);
 
   const resumeId = params.id as string;
 
@@ -110,7 +112,10 @@ export default function EditorPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+          <button
+            onClick={() => setShowAIPanel(true)}
+            className="flex items-center gap-2 px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+          >
             <Sparkles className="w-4 h-4" />
             AI Assist
           </button>
@@ -172,6 +177,9 @@ export default function EditorPage() {
           </div>
         </div>
       </div>
+
+      {/* AI Panel */}
+      <AIPanel isOpen={showAIPanel} onClose={() => setShowAIPanel(false)} resumeId={resumeId} />
     </div>
   );
 }
