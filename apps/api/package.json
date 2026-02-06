@@ -12,13 +12,18 @@
   "dependencies": {
     "express": "^4.21.2",
     "@yukti/shared": "workspace:*",
+    "@yukti/database": "workspace:*",
     "@aws-sdk/client-s3": "^3.716.0",
-    "@aws-sdk/s3-request-presigner": "^3.716.0"
+    "@aws-sdk/s3-request-presigner": "^3.716.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.716.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.151",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
+    "@types/jsonwebtoken": "^9.0.7",
     "esbuild": "^0.24.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
