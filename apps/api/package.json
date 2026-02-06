@@ -1,0 +1,25 @@
+{
+  "name": "@yukti/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && esbuild src/**/*.ts --bundle --platform=node --outdir=dist --format=esm",
+    "build:lambda": "tsx scripts/build-lambdas.ts",
+    "lint": "eslint . --ext .ts"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "@yukti/shared": "workspace:*",
+    "@aws-sdk/client-s3": "^3.716.0",
+    "@aws-sdk/s3-request-presigner": "^3.716.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "esbuild": "^0.24.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
