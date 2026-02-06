@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export", // Static export for S3 deployment
+  // Removed 'output: export' to support dynamic routes
+  // For S3 deployment, we'll use client-side routing instead
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true,
   },
-  // Disable features not available in static export
   trailingSlash: true,
 };
 
