@@ -9,6 +9,7 @@ import BasicsForm from "@/components/editor/BasicsForm";
 import WorkForm from "@/components/editor/WorkForm";
 import ResumePreview from "@/components/editor/ResumePreview";
 import AIPanel from "@/components/editor/AIPanel";
+import ExportPanel from "@/components/editor/ExportPanel";
 import {
   ArrowLeft,
   Save,
@@ -31,6 +32,7 @@ export default function EditorPage() {
   const [activeTab, setActiveTab] = useState<EditorTab>("basics");
   const [title, setTitle] = useState("");
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showExportPanel, setShowExportPanel] = useState(false);
 
   const resumeId = params.id as string;
 
@@ -119,7 +121,10 @@ export default function EditorPage() {
             <Sparkles className="w-4 h-4" />
             AI Assist
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+          <button
+            onClick={() => setShowExportPanel(true)}
+            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+          >
             <Download className="w-4 h-4" />
             Export
           </button>
@@ -180,6 +185,13 @@ export default function EditorPage() {
 
       {/* AI Panel */}
       <AIPanel isOpen={showAIPanel} onClose={() => setShowAIPanel(false)} resumeId={resumeId} />
+
+      {/* Export Panel */}
+      <ExportPanel
+        isOpen={showExportPanel}
+        onClose={() => setShowExportPanel(false)}
+        resumeId={resumeId}
+      />
     </div>
   );
 }

@@ -17,7 +17,8 @@
     "aws-amplify": "^6.11.3",
     "zustand": "^5.0.3",
     "axios": "^1.7.9",
-    "lucide-react": "^0.469.0"
+    "lucide-react": "^0.469.0",
+    "docx": "^9.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
