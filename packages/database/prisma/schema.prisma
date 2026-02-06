@@ -1,0 +1,85 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - stores authenticated user data
+model User {
+  id        String   @id @default(uuid())
+  cognitoId String   @unique
+  email     String   @unique
+  name      String?
+  plan      Plan     @default(FREE)
+  
+  // Relations
+  resumes   Resume[]
+  documents Document[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([cognitoId])
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+// Resume model - main resume entity
+model Resume {
+  id     String @id @default(uuid())
+  userId String
+  title  String @default("Untitled Resume")
+  
+  // Relations
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshots ResumeSnapshot[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([updatedAt])
+}
+
+// ResumeSnapshot - version history for resumes
+model ResumeSnapshot {
+  id       String @id @default(uuid())
+  resumeId String
+  version  Int    @default(1)
+  content  Json   // Full JSON Resume data
+  
+  // Relations
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@unique([resumeId, version])
+  @@index([resumeId])
+}
+
+// Document - reference documents uploaded by users for AI context
+model Document {
+  id       String @id @default(uuid())
+  userId   String
+  key      String // S3 key
+  fileName String
+  fileType String
+  size     Int    // In bytes
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
