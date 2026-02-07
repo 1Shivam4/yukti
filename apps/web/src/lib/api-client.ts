@@ -1,12 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
-import { fetchAuthSession } from "aws-amplify/auth";
-import { API_BASE_URL } from "./amplify-config";
 
-// Token refresh threshold - refresh when less than 5 minutes left
-const TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
-
-// Pending refresh promise to prevent multiple simultaneous refreshes
-let refreshPromise: Promise<string | null> | null = null;
+// API base URL from environment
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
 
 // Get device ID from localStorage
 function getDeviceId(): string {
@@ -14,44 +9,10 @@ function getDeviceId(): string {
   return localStorage.getItem("deviceId") || "";
 }
 
-// Check if token needs refresh
-async function getValidToken(): Promise<string | null> {
-  try {
-    const session = await fetchAuthSession();
-    const accessToken = session.tokens?.accessToken;
-
-    if (!accessToken) return null;
-
-    // Check if token is about to expire
-    const expiresAt = (accessToken.payload?.exp as number) * 1000;
-    const now = Date.now();
-
-    if (expiresAt - now < TOKEN_REFRESH_THRESHOLD_MS) {
-      // Token expiring soon, force refresh
-      if (!refreshPromise) {
-        refreshPromise = refreshToken();
-      }
-      return await refreshPromise;
-    }
-
-    return accessToken.toString();
-  } catch (error) {
-    console.error("Error getting token:", error);
-    return null;
-  }
-}
-
-// Refresh the token
-async function refreshToken(): Promise<string | null> {
-  try {
-    const session = await fetchAuthSession({ forceRefresh: true });
-    return session.tokens?.accessToken?.toString() || null;
-  } catch (error) {
-    console.error("Token refresh failed:", error);
-    return null;
-  } finally {
-    refreshPromise = null;
-  }
+// Get access token from localStorage
+function getAccessToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("accessToken");
 }
 
 const apiClient = axios.create({
@@ -66,7 +27,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      const token = await getValidToken();
+      const token = getAccessToken();
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -88,34 +49,16 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor - handle auth errors and retry
+// Response interceptor - handle auth errors
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-    // If 401 and we haven't retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        // Try to refresh the token
-        const newToken = await refreshToken();
-
-        if (newToken) {
-          // Retry the original request with new token
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return apiClient(originalRequest);
-        }
-      } catch (refreshError) {
-        console.error("Token refresh failed on retry:", refreshError);
-      }
-
-      // Redirect to login if refresh fails
+    // If 401, redirect to login
+    if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
-        // Clear any stored tokens
-        sessionStorage.removeItem("accessToken");
-        sessionStorage.removeItem("idToken");
+        // Clear stored auth data
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
 
         // Redirect to login
         window.location.href = "/auth/login";
@@ -137,5 +80,5 @@ apiClient.interceptors.response.use(
 
 export default apiClient;
 
-// Export helper for manual token refresh
-export { refreshToken, getValidToken };
+// Export helper for getting token
+export { getAccessToken };

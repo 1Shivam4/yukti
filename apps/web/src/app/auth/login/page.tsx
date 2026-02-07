@@ -6,8 +6,9 @@ import Link from "next/link";
 import { Loader2, AlertCircle } from "lucide-react";
 import { AuthCard, PasswordInput, SocialLoginButtons } from "@/components/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import { GuestGuard } from "@/components/auth/AuthGuard";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const { signIn } = useAuth();
 
@@ -23,7 +24,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await signIn({ username: email, password });
+      await signIn(email, password);
       router.push("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
@@ -46,7 +47,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       // For social login, redirect to Cognito hosted UI
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
       const response = await fetch(`${baseUrl}/auth/social/google`);
       const data = await response.json();
 
@@ -63,7 +64,7 @@ export default function LoginPage() {
 
   const handleFacebookLogin = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
       const response = await fetch(`${baseUrl}/auth/social/facebook`);
       const data = await response.json();
 
@@ -178,5 +179,13 @@ export default function LoginPage() {
         </p>
       </form>
     </AuthCard>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <GuestGuard>
+      <LoginContent />
+    </GuestGuard>
   );
 }

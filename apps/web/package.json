@@ -9,16 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@yukti/shared": "workspace:*",
+    "@yukti/ui": "workspace:*",
+    "axios": "^1.7.9",
+    "docx": "^9.5.0",
+    "lucide-react": "^0.469.0",
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@yukti/shared": "workspace:*",
-    "@yukti/ui": "workspace:*",
-    "aws-amplify": "^6.11.3",
-    "zustand": "^5.0.3",
-    "axios": "^1.7.9",
-    "lucide-react": "^0.469.0",
-    "docx": "^9.5.0"
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

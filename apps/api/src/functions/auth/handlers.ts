@@ -7,6 +7,7 @@ import {
   refreshCognitoTokens,
   globalSignOut,
   getUserFromToken,
+  getUserFromIdToken,
   getSocialLoginUrl,
   exchangeCodeForTokens,
 } from "../../utils/cognito";
@@ -624,7 +625,7 @@ export async function handleGetSocialLoginUrl(
   const redirectUri =
     event.queryStringParameters?.redirect_uri ||
     process.env.OAUTH_REDIRECT_URI ||
-    "http://localhost:3000/auth/callback";
+    "http://localhost:9000/auth/callback";
 
   // Generate state for CSRF protection
   const state = generateDeviceId();
@@ -669,13 +670,13 @@ export async function handleSocialCallback(
 
   try {
     const callbackUri =
-      redirectUri || process.env.OAUTH_REDIRECT_URI || "http://localhost:3000/auth/callback";
+      redirectUri || process.env.OAUTH_REDIRECT_URI || "http://localhost:9000/auth/callback";
 
     // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(code, callbackUri);
 
-    // Get user from Cognito
-    const cognitoUser = await getUserFromToken(tokens.accessToken);
+    // Get user from ID token (doesn't require admin scope like GetUserCommand)
+    const cognitoUser = getUserFromIdToken(tokens.idToken);
 
     // Find or create user in database
     let user = await prisma.user.findUnique({

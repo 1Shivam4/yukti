@@ -87,7 +87,7 @@ bun dev
 ```bash
 cd apps/api
 bun dev
-# API runs on http://localhost:3001
+# API runs on http://localhost:9000
 ```
 
 ### Testing Build

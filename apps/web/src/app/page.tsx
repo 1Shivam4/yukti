@@ -20,7 +20,7 @@ export default function LandingPage() {
               Pricing
             </Link>
             <Link
-              href="/dashboard"
+              href="/auth/login"
               className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
             >
               Get Started
@@ -49,7 +49,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/dashboard"
+              href="/auth/login"
               className="px-8 py-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-semibold text-lg shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300"
             >
               Start Building Free
@@ -142,7 +142,7 @@ export default function LandingPage() {
             Join thousands of professionals who landed their dream jobs with Yukti
           </p>
           <Link
-            href="/dashboard"
+            href="/auth/login"
             className="inline-block px-8 py-4 bg-white text-indigo-600 rounded-xl hover:bg-indigo-50 transition font-semibold text-lg shadow-lg"
           >
             Get Started Now — It&apos;s Free

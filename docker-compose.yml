@@ -1,24 +1,64 @@
 version: "3.8"
 
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: yukti-postgres
+    container_name: yukti-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: yukti
-      POSTGRES_USER: yukti_admin
-      POSTGRES_PASSWORD: yukti_dev_password
+      POSTGRES_USER: yukti
+      POSTGRES_PASSWORD: yukti_password
+      POSTGRES_DB: yukti_dev
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U yukti_admin -d yukti"]
+      test: ["CMD-SHELL", "pg_isready -U yukti -d yukti_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: yukti-api
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      - NODE_ENV=production
+      - PORT=9000
+      - DATABASE_URL=postgresql://yukti:yukti_password@postgres:5432/yukti_dev
+      - COGNITO_USER_POOL_ID=${COGNITO_USER_POOL_ID}
+      - COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}
+      - COGNITO_DOMAIN=${COGNITO_DOMAIN}
+      - OAUTH_REDIRECT_URI=http://localhost:9000/auth/callback
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Frontend Service
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:9000
+        - NEXT_PUBLIC_COGNITO_DOMAIN=${COGNITO_DOMAIN}
+        - NEXT_PUBLIC_COGNITO_CLIENT_ID=${COGNITO_CLIENT_ID}
+    container_name: yukti-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
-    driver: local

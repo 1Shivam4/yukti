@@ -1,54 +1,33 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  type ReactNode,
-} from "react";
-import {
-  getCurrentUser,
-  signIn,
-  signOut,
-  signUp,
-  fetchAuthSession,
-  type SignInInput,
-  type SignUpInput,
-} from "aws-amplify/auth";
-import { configureAmplify } from "@/lib/amplify-config";
-
-configureAmplify();
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 
 interface User {
-  userId: string;
+  id: string;
   email: string;
   name?: string;
   plan?: "FREE" | "PRO";
 }
 
-interface Session {
-  deviceId: string;
-  deviceName?: string;
-}
-
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  session: Session | null;
-  signIn: (input: SignInInput) => Promise<void>;
-  signUp: (input: SignUpInput) => Promise<void>;
-  signOut: (options?: { allDevices?: boolean }) => Promise<void>;
-  refreshSession: () => Promise<string | null>;
-  getAccessToken: () => Promise<string | null>;
+  isAuthenticated: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    name?: string
+  ) => Promise<{ needsVerification: boolean }>;
+  verifyEmail: (email: string, code: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  signInWithGoogle: () => void;
+  getAccessToken: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Token refresh threshold - refresh when less than 5 minutes left
-const TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
 
 // Helper to generate/get device ID
 function getDeviceId(): string {
@@ -62,245 +41,164 @@ function getDeviceId(): string {
   return deviceId;
 }
 
-// Helper to get browser name
-function getBrowserName(): string {
-  if (typeof window === "undefined") return "Unknown";
-
-  const ua = navigator.userAgent;
-  if (ua.includes("Chrome")) return "Chrome";
-  if (ua.includes("Firefox")) return "Firefox";
-  if (ua.includes("Safari")) return "Safari";
-  if (ua.includes("Edge")) return "Edge";
-  return "Browser";
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isRefreshingRef = useRef(false);
 
-  // Clear refresh timer
-  const clearRefreshTimer = useCallback(() => {
-    if (refreshTimerRef.current) {
-      clearTimeout(refreshTimerRef.current);
-      refreshTimerRef.current = null;
-    }
-  }, []);
-
-  // Schedule token refresh
-  const scheduleTokenRefresh = useCallback(
-    (expiresInMs: number) => {
-      clearRefreshTimer();
-
-      // Refresh 5 minutes before expiry
-      const refreshInMs = Math.max(expiresInMs - TOKEN_REFRESH_THRESHOLD_MS, 30000);
-
-      console.log(`Scheduling token refresh in ${Math.round(refreshInMs / 1000 / 60)} minutes`);
-
-      refreshTimerRef.current = setTimeout(async () => {
-        console.log("Auto-refreshing tokens...");
-        await refreshSession();
-      }, refreshInMs);
-    },
-    [clearRefreshTimer]
-  );
-
-  // Refresh session tokens
-  const refreshSession = useCallback(async (): Promise<string | null> => {
-    if (isRefreshingRef.current) {
-      console.log("Token refresh already in progress");
-      return null;
-    }
-
-    isRefreshingRef.current = true;
-
-    try {
-      const authSession = await fetchAuthSession({ forceRefresh: true });
-      const accessToken = authSession.tokens?.accessToken?.toString();
-
-      if (accessToken && authSession.tokens?.accessToken?.payload?.exp) {
-        const expiresAt = authSession.tokens.accessToken.payload.exp * 1000;
-        const expiresInMs = expiresAt - Date.now();
-        scheduleTokenRefresh(expiresInMs);
-      }
-
-      return accessToken || null;
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      return null;
-    } finally {
-      isRefreshingRef.current = false;
-    }
-  }, [scheduleTokenRefresh]);
-
-  // Get current access token (with refresh if needed)
-  const getAccessToken = useCallback(async (): Promise<string | null> => {
-    try {
-      const authSession = await fetchAuthSession();
-      const accessToken = authSession.tokens?.accessToken;
-
-      if (!accessToken) return null;
-
-      // Check if token is about to expire
-      const expiresAt = (accessToken.payload?.exp as number) * 1000;
-      const now = Date.now();
-
-      if (expiresAt - now < TOKEN_REFRESH_THRESHOLD_MS) {
-        // Token expiring soon, refresh it
-        return await refreshSession();
-      }
-
-      return accessToken.toString();
-    } catch (error) {
-      console.error("Error getting access token:", error);
-      return null;
-    }
-  }, [refreshSession]);
-
-  // Check current user on mount
+  // Load user from localStorage on mount
   useEffect(() => {
-    const checkUser = async () => {
+    const loadUser = () => {
       try {
-        const currentUser = await getCurrentUser();
-        const authSession = await fetchAuthSession();
+        const storedUser = localStorage.getItem("user");
+        const storedToken = localStorage.getItem("accessToken");
 
-        setUser({
-          userId: currentUser.userId,
-          email: currentUser.signInDetails?.loginId || "",
-          name: currentUser.username,
-        });
-
-        setSession({
-          deviceId: getDeviceId(),
-          deviceName: getBrowserName(),
-        });
-
-        // Schedule token refresh based on current token expiry
-        if (authSession.tokens?.accessToken?.payload?.exp) {
-          const expiresAt = authSession.tokens.accessToken.payload.exp * 1000;
-          const expiresInMs = expiresAt - Date.now();
-          scheduleTokenRefresh(expiresInMs);
+        if (storedUser && storedToken) {
+          const userData = JSON.parse(storedUser);
+          setUser({
+            id: userData.id,
+            email: userData.email,
+            name: userData.name,
+            plan: userData.plan,
+          });
         }
-      } catch (error) {
-        setUser(null);
-        setSession(null);
+      } catch {
+        // Clear invalid data
+        localStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
       } finally {
         setLoading(false);
       }
     };
 
-    checkUser();
+    loadUser();
+  }, []);
 
-    return () => {
-      clearRefreshTimer();
-    };
-  }, [scheduleTokenRefresh, clearRefreshTimer]);
+  // Get access token from localStorage
+  const getAccessToken = useCallback((): string | null => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("accessToken");
+  }, []);
 
-  // Handle sign in
-  const handleSignIn = async (input: SignInInput) => {
-    const result = await signIn(input);
+  // Sign in with email and password
+  const signIn = useCallback(async (email: string, password: string): Promise<void> => {
+    const response = await fetch(`${API_URL}/auth/signin`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Device-Id": getDeviceId(),
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-    if (result.isSignedIn) {
-      const currentUser = await getCurrentUser();
-      const authSession = await fetchAuthSession();
+    const data = await response.json();
 
-      setUser({
-        userId: currentUser.userId,
-        email: currentUser.signInDetails?.loginId || "",
-        name: currentUser.username,
-      });
-
-      setSession({
-        deviceId: getDeviceId(),
-        deviceName: getBrowserName(),
-      });
-
-      // Schedule token refresh
-      if (authSession.tokens?.accessToken?.payload?.exp) {
-        const expiresAt = authSession.tokens.accessToken.payload.exp * 1000;
-        const expiresInMs = expiresAt - Date.now();
-        scheduleTokenRefresh(expiresInMs);
-      }
-
-      // Sync session with backend
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-        const token = authSession.tokens?.idToken?.toString();
-        const refreshToken = authSession.tokens?.accessToken?.toString(); // Using access token for now
-
-        await fetch(`${baseUrl}/auth/signin`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "X-Device-Id": getDeviceId(),
-            "X-Device-Name": getBrowserName(),
-            "X-Device-Type": "web",
-          },
-          body: JSON.stringify({
-            email: currentUser.signInDetails?.loginId,
-            // Note: password is not sent here, just syncing session
-          }),
-        });
-      } catch (syncError) {
-        console.error("Session sync failed:", syncError);
-        // Continue anyway - user is still signed in
-      }
+    if (!response.ok) {
+      throw new Error(data.message || "Sign in failed");
     }
-  };
 
-  // Handle sign up
-  const handleSignUp = async (input: SignUpInput) => {
-    await signUp(input);
-  };
+    // Store tokens and user
+    if (data.tokens?.accessToken) {
+      localStorage.setItem("accessToken", data.tokens.accessToken);
+    }
+    if (data.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        plan: data.user.plan,
+      });
+    }
+  }, []);
 
-  // Handle sign out
-  const handleSignOut = async (options?: { allDevices?: boolean }) => {
-    clearRefreshTimer();
+  // Sign up with email and password
+  const signUp = useCallback(
+    async (
+      email: string,
+      password: string,
+      name?: string
+    ): Promise<{ needsVerification: boolean }> => {
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password, name }),
+      });
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Sign up failed");
+      }
+
+      return { needsVerification: true };
+    },
+    []
+  );
+
+  // Verify email with code
+  const verifyEmail = useCallback(async (email: string, code: string): Promise<void> => {
+    const response = await fetch(`${API_URL}/auth/verify`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, code }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Verification failed");
+    }
+  }, []);
+
+  // Sign out
+  const signOut = useCallback(async (): Promise<void> => {
     try {
-      // Notify backend to revoke session
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-      const authSession = await fetchAuthSession();
-      const token = authSession.tokens?.idToken?.toString();
-
+      const token = localStorage.getItem("accessToken");
       if (token) {
-        await fetch(`${baseUrl}/auth/signout`, {
+        await fetch(`${API_URL}/auth/signout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
             "X-Device-Id": getDeviceId(),
           },
-          body: JSON.stringify({
-            allDevices: options?.allDevices,
-          }),
         }).catch(() => {
           // Ignore errors - we're signing out anyway
         });
       }
-    } catch {
-      // Ignore errors
+    } finally {
+      // Clear local storage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      setUser(null);
     }
+  }, []);
 
-    // Sign out from Amplify
-    await signOut({ global: options?.allDevices ?? false });
-    setUser(null);
-    setSession(null);
-  };
+  // Redirect to Google OAuth
+  const signInWithGoogle = useCallback(() => {
+    // Generate state for CSRF protection
+    const state = `dev_${crypto.randomUUID()}`;
+    localStorage.setItem("oauth_state", state);
+
+    // Redirect to API which will redirect to Cognito
+    window.location.href = `${API_URL}/auth/social/google`;
+  }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
-        session,
-        signIn: handleSignIn,
-        signUp: handleSignUp,
-        signOut: handleSignOut,
-        refreshSession,
+        isAuthenticated: !!user,
+        signIn,
+        signUp,
+        verifyEmail,
+        signOut,
+        signInWithGoogle,
         getAccessToken,
       }}
     >

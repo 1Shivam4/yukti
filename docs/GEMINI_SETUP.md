@@ -165,7 +165,7 @@ cd apps/api
 bun dev
 
 # Test generate endpoint
-curl -X POST http://localhost:3001/api/ai/generate \
+curl -X POST http://localhost:9000/api/ai/generate \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

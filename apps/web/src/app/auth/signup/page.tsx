@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { AuthCard, PasswordInput, SocialLoginButtons } from "@/components/auth";
+import { GuestGuard } from "@/components/auth/AuthGuard";
 
-export default function SignupPage() {
+function SignupContent() {
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -58,7 +59,7 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
       const response = await fetch(`${baseUrl}/auth/signup`, {
         method: "POST",
         headers: {
@@ -90,7 +91,7 @@ export default function SignupPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
       const response = await fetch(`${baseUrl}/auth/social/google`);
       const data = await response.json();
 
@@ -106,7 +107,7 @@ export default function SignupPage() {
 
   const handleFacebookLogin = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
       const response = await fetch(`${baseUrl}/auth/social/facebook`);
       const data = await response.json();
 
@@ -265,5 +266,13 @@ export default function SignupPage() {
         </p>
       </form>
     </AuthCard>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <GuestGuard>
+      <SignupContent />
+    </GuestGuard>
   );
 }

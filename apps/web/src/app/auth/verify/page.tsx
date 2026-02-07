@@ -86,7 +86,7 @@ function VerifyContent() {
     setIsLoading(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
       const response = await fetch(`${baseUrl}/auth/verify`, {
         method: "POST",
         headers: {

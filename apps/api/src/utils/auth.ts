@@ -1,22 +1,30 @@
 import jwt from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
 
-const COGNITO_ISSUER = process.env.COGNITO_ISSUER || "";
-const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || "";
-const AWS_REGION = process.env.AWS_REGION || "us-east-1";
+// Use getter functions to ensure env vars are read after dotenv loads
+const getIssuer = () => process.env.COGNITO_ISSUER || "";
+const getUserPoolId = () => process.env.COGNITO_USER_POOL_ID || "";
+const getRegion = () => process.env.AWS_REGION || "us-east-1";
 
-// JWKS client to fetch Cognito public keys
-const client = jwksClient({
-  jwksUri: `https://cognito-idp.${AWS_REGION}.amazonaws.com/${COGNITO_USER_POOL_ID}/.well-known/jwks.json`,
-  cache: true,
-  rateLimit: true,
-});
+// Lazy-initialized JWKS client
+let client: jwksClient.JwksClient | null = null;
+
+function getJwksClient(): jwksClient.JwksClient {
+  if (!client) {
+    client = jwksClient({
+      jwksUri: `https://cognito-idp.${getRegion()}.amazonaws.com/${getUserPoolId()}/.well-known/jwks.json`,
+      cache: true,
+      rateLimit: true,
+    });
+  }
+  return client;
+}
 
 /**
  * Get signing key from Cognito JWKS
  */
 function getKey(header: jwt.JwtHeader, callback: jwt.SigningKeyCallback) {
-  client.getSigningKey(header.kid, (err, key) => {
+  getJwksClient().getSigningKey(header.kid, (err, key) => {
     if (err) {
       callback(err);
       return;
@@ -35,7 +43,7 @@ export async function verifyToken(token: string): Promise<jwt.JwtPayload> {
       token,
       getKey,
       {
-        issuer: COGNITO_ISSUER,
+        issuer: getIssuer(),
         algorithms: ["RS256"],
       },
       (err, decoded) => {

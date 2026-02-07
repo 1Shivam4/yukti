@@ -15,72 +15,58 @@ function CallbackContent() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const code = searchParams.get("code");
-        const state = searchParams.get("state");
+        // Check for error in query params
         const errorParam = searchParams.get("error");
-        const errorDescription = searchParams.get("error_description");
+        const errorMessage = searchParams.get("message");
 
-        // Handle OAuth error
         if (errorParam) {
-          throw new Error(errorDescription || errorParam);
+          throw new Error(errorMessage || errorParam);
         }
 
-        if (!code) {
-          throw new Error("No authorization code received");
+        // Check for auth data in URL fragment
+        const hash = window.location.hash;
+        if (hash && hash.includes("data=")) {
+          const encodedData = hash.split("data=")[1];
+          if (!encodedData) {
+            throw new Error("No authentication data received");
+          }
+
+          // Decode the base64url data
+          const jsonData = atob(encodedData.replace(/-/g, "+").replace(/_/g, "/"));
+          const authData = JSON.parse(jsonData);
+
+          // Store only essential data in localStorage
+          if (authData.accessToken) {
+            localStorage.setItem("accessToken", authData.accessToken);
+          }
+          if (authData.user) {
+            localStorage.setItem("user", JSON.stringify(authData.user));
+          }
+
+          // Clean up URL fragment
+          window.history.replaceState(null, "", window.location.pathname);
+
+          setStatus("success");
+
+          // Redirect to dashboard
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 1000);
+          return;
         }
 
-        // Verify state for CSRF protection
-        const savedState = localStorage.getItem("oauth_state");
-        if (state && savedState && state !== savedState) {
-          throw new Error("Invalid state parameter - possible CSRF attack");
+        // Check if user is already logged in (page refresh after auth)
+        const existingToken = localStorage.getItem("accessToken");
+        if (existingToken) {
+          setStatus("success");
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 1000);
+          return;
         }
 
-        // Exchange code for tokens
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-        const response = await fetch(`${baseUrl}/auth/callback`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Device-Id": getOrCreateDeviceId(),
-            "X-Device-Name": getBrowserName(),
-            "X-Device-Type": getDeviceType(),
-          },
-          body: JSON.stringify({
-            code,
-            redirectUri: window.location.origin + "/auth/callback",
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Authentication failed");
-        }
-
-        // Store tokens
-        if (data.tokens) {
-          sessionStorage.setItem("accessToken", data.tokens.accessToken);
-          sessionStorage.setItem("idToken", data.tokens.idToken);
-        }
-
-        if (data.session) {
-          localStorage.setItem("deviceId", data.session.deviceId);
-        }
-
-        // Clean up state
-        localStorage.removeItem("oauth_state");
-
-        setStatus("success");
-
-        // Notify about removed devices
-        if (data.removedDevices && data.removedDevices.length > 0) {
-          console.log("Devices removed due to limit:", data.removedDevices);
-        }
-
-        // Redirect to dashboard
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1500);
+        // No auth data found
+        throw new Error("No authentication data received");
       } catch (err) {
         console.error("OAuth callback error:", err);
         setError(err instanceof Error ? err.message : "Authentication failed");

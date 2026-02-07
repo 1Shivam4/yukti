@@ -14,8 +14,9 @@ const cognito = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION || "us-east-1",
 });
 
-const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || "";
-const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || "";
+// Use getters to ensure env vars are read after dotenv loads
+const getClientId = () => process.env.COGNITO_CLIENT_ID || "";
+const getUserPoolId = () => process.env.COGNITO_USER_POOL_ID || "";
 
 export interface CognitoTokens {
   accessToken: string;
@@ -40,7 +41,7 @@ export async function signUpUser(
   name: string
 ): Promise<{ userSub: string; isConfirmed: boolean }> {
   const params: SignUpCommandInput = {
-    ClientId: COGNITO_CLIENT_ID,
+    ClientId: getClientId(),
     Username: email,
     Password: password,
     UserAttributes: [
@@ -63,7 +64,7 @@ export async function signUpUser(
  */
 export async function confirmSignUp(email: string, code: string): Promise<void> {
   const command = new ConfirmSignUpCommand({
-    ClientId: COGNITO_CLIENT_ID,
+    ClientId: getClientId(),
     Username: email,
     ConfirmationCode: code,
   });
@@ -77,7 +78,7 @@ export async function confirmSignUp(email: string, code: string): Promise<void> 
 export async function signInUser(email: string, password: string): Promise<CognitoTokens> {
   const params: InitiateAuthCommandInput = {
     AuthFlow: "USER_PASSWORD_AUTH",
-    ClientId: COGNITO_CLIENT_ID,
+    ClientId: getClientId(),
     AuthParameters: {
       USERNAME: email,
       PASSWORD: password,
@@ -107,7 +108,7 @@ export async function refreshCognitoTokens(
 ): Promise<Omit<CognitoTokens, "refreshToken">> {
   const params: InitiateAuthCommandInput = {
     AuthFlow: "REFRESH_TOKEN_AUTH",
-    ClientId: COGNITO_CLIENT_ID,
+    ClientId: getClientId(),
     AuthParameters: {
       REFRESH_TOKEN: refreshToken,
     },
@@ -128,7 +129,7 @@ export async function refreshCognitoTokens(
 }
 
 /**
- * Get user info from access token
+ * Get user info from access token (requires aws.cognito.signin.user.admin scope)
  */
 export async function getUserFromToken(accessToken: string): Promise<CognitoUser> {
   const command = new GetUserCommand({
@@ -148,12 +149,33 @@ export async function getUserFromToken(accessToken: string): Promise<CognitoUser
 }
 
 /**
+ * Get user info from ID token (for social logins - doesn't require admin scope)
+ * The ID token is a JWT that contains user claims
+ */
+export function getUserFromIdToken(idToken: string): CognitoUser {
+  // Decode the JWT payload (middle part)
+  const parts = idToken.split(".");
+  if (parts.length !== 3) {
+    throw new Error("Invalid ID token format");
+  }
+
+  const payload = JSON.parse(Buffer.from(parts[1], "base64").toString("utf-8"));
+
+  return {
+    sub: payload.sub || "",
+    email: payload.email || "",
+    name: payload.name || payload["cognito:username"],
+    emailVerified: payload.email_verified === true || payload.email_verified === "true",
+  };
+}
+
+/**
  * Get user by email from user pool (admin operation)
  */
 export async function adminGetUser(email: string): Promise<CognitoUser | null> {
   try {
     const command = new AdminGetUserCommand({
-      UserPoolId: COGNITO_USER_POOL_ID,
+      UserPoolId: getUserPoolId(),
       Username: email,
     });
 
@@ -195,7 +217,7 @@ export function getSocialLoginUrl(
   state: string
 ): string {
   const cognitoDomain = process.env.COGNITO_DOMAIN || "";
-  const clientId = COGNITO_CLIENT_ID;
+  const clientId = getClientId();
 
   const params = new URLSearchParams({
     identity_provider: provider,
@@ -217,7 +239,7 @@ export async function exchangeCodeForTokens(
   redirectUri: string
 ): Promise<CognitoTokens> {
   const cognitoDomain = process.env.COGNITO_DOMAIN || "";
-  const clientId = COGNITO_CLIENT_ID;
+  const clientId = getClientId();
 
   const response = await fetch(`https://${cognitoDomain}/oauth2/token`, {
     method: "POST",
