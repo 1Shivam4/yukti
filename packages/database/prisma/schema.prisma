@@ -21,12 +21,36 @@ model User {
   // Relations
   resumes   Resume[]
   documents Document[]
+  sessions  UserSession[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([email])
   @@index([cognitoId])
+}
+
+// UserSession model - tracks device sessions for multi-device support
+model UserSession {
+  id           String   @id @default(uuid())
+  userId       String
+  deviceId     String   @unique
+  deviceName   String?  // e.g., "Chrome on Windows"
+  deviceType   String?  // web, mobile, tablet
+  ipAddress    String?
+  userAgent    String?
+  refreshToken String   @unique
+  lastActive   DateTime @default(now())
+  expiresAt    DateTime
+  isActive     Boolean  @default(true)
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([refreshToken])
+  @@index([lastActive])
 }
 
 enum Plan {

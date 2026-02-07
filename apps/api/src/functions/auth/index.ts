@@ -1,16 +1,39 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import {
-  CognitoIdentityProviderClient,
-  AdminCreateUserCommand,
-} from "@aws-sdk/client-cognito-identity-provider";
 import { prisma } from "@yukti/database";
+import {
+  handleSignUp,
+  handleVerify,
+  handleSignIn,
+  handleRefreshToken,
+  handleSignOut,
+  handleGetSessions,
+  handleGetSocialLoginUrl,
+  handleSocialCallback,
+  handleGetMe,
+} from "./handlers";
 
-const cognito = new CognitoIdentityProviderClient({
-  region: process.env.AWS_REGION || "us-east-1",
-});
+// CORS headers
+const corsHeaders = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, X-Device-Id, X-Device-Name, X-Device-Type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+};
 
 /**
- * Webhook handler for Cognito post-confirmation trigger
+ * Handle CORS preflight requests
+ */
+function handleOptions(): APIGatewayProxyResult {
+  return {
+    statusCode: 204,
+    headers: corsHeaders,
+    body: "",
+  };
+}
+
+/**
+ * Legacy webhook handler for Cognito post-confirmation trigger
  * Creates user in PostgreSQL after successful Cognito signup
  */
 export const cognitoWebhook = async (
@@ -23,7 +46,24 @@ export const cognitoWebhook = async (
     if (!cognitoId || !email) {
       return {
         statusCode: 400,
+        headers: corsHeaders,
         body: JSON.stringify({ error: "Missing required fields: cognitoId, email" }),
+      };
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { cognitoId },
+    });
+
+    if (existingUser) {
+      return {
+        statusCode: 200,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          message: "User already exists",
+          userId: existingUser.id,
+        }),
       };
     }
 
@@ -41,10 +81,7 @@ export const cognitoWebhook = async (
 
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: corsHeaders,
       body: JSON.stringify({
         message: "User created successfully",
         userId: user.id,
@@ -55,10 +92,7 @@ export const cognitoWebhook = async (
 
     return {
       statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: corsHeaders,
       body: JSON.stringify({
         error: "Failed to create user",
         message: error instanceof Error ? error.message : "Unknown error",
@@ -71,23 +105,98 @@ export const cognitoWebhook = async (
  * Main auth handler - routes to appropriate function
  */
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log("Auth function called:", event.path);
+  console.log("Auth function called:", event.httpMethod, event.path);
 
-  // Route based on path
-  if (event.path.includes("/cognito-webhook") && event.httpMethod === "POST") {
-    return cognitoWebhook(event);
+  // Handle CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return handleOptions();
   }
 
-  // Default response
-  return {
-    statusCode: 404,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-    },
-    body: JSON.stringify({
-      error: "Not found",
-      path: event.path,
-    }),
-  };
+  const path = event.path.toLowerCase();
+  const method = event.httpMethod;
+
+  // Route based on path and method
+  try {
+    // POST /auth/signup - Register new user
+    if (path.endsWith("/signup") && method === "POST") {
+      return handleSignUp(event);
+    }
+
+    // POST /auth/verify - Verify email with code
+    if (path.endsWith("/verify") && method === "POST") {
+      return handleVerify(event);
+    }
+
+    // POST /auth/signin - Sign in with email/password
+    if (path.endsWith("/signin") && method === "POST") {
+      return handleSignIn(event);
+    }
+
+    // POST /auth/refresh - Refresh tokens
+    if (path.endsWith("/refresh") && method === "POST") {
+      return handleRefreshToken(event);
+    }
+
+    // POST /auth/signout - Sign out (current or all devices)
+    if (path.endsWith("/signout") && method === "POST") {
+      return handleSignOut(event);
+    }
+
+    // GET /auth/sessions - Get active sessions
+    if (path.endsWith("/sessions") && method === "GET") {
+      return handleGetSessions(event);
+    }
+
+    // GET /auth/social/:provider - Get social login URL
+    if (path.includes("/social/") && method === "GET") {
+      return handleGetSocialLoginUrl(event);
+    }
+
+    // POST /auth/callback - Handle social login callback
+    if (path.endsWith("/callback") && method === "POST") {
+      return handleSocialCallback(event);
+    }
+
+    // GET /auth/me - Get current user info
+    if (path.endsWith("/me") && method === "GET") {
+      return handleGetMe(event);
+    }
+
+    // Legacy: POST /auth/cognito-webhook
+    if (path.includes("/cognito-webhook") && method === "POST") {
+      return cognitoWebhook(event);
+    }
+
+    // Not found
+    return {
+      statusCode: 404,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        error: "NotFound",
+        message: `Route not found: ${method} ${path}`,
+        availableRoutes: [
+          "POST /auth/signup",
+          "POST /auth/verify",
+          "POST /auth/signin",
+          "POST /auth/refresh",
+          "POST /auth/signout",
+          "GET /auth/sessions",
+          "GET /auth/social/:provider",
+          "POST /auth/callback",
+          "GET /auth/me",
+        ],
+      }),
+    };
+  } catch (error) {
+    console.error("Auth handler error:", error);
+
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        error: "InternalError",
+        message: error instanceof Error ? error.message : "An unexpected error occurred",
+      }),
+    };
+  }
 };

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client/edge";
+import { PrismaClient } from "@prisma/client";
 
 // Singleton pattern for Prisma client
 const globalForPrisma = globalThis as unknown as {
@@ -14,5 +14,5 @@ export const prisma =
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // Re-export Prisma types and client
-export { PrismaClient } from "@prisma/client/edge";
-export type * from "@prisma/client";
+export { PrismaClient } from "@prisma/client";
+export * from "@prisma/client";
