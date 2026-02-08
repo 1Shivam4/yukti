@@ -41,6 +41,44 @@ app.get("/health", (_req, res) => {
 });
 
 /**
+ * Extract path parameters from URL path
+ * Handles patterns like /resumes/:id, /ai/:action, etc.
+ */
+function extractPathParams(path: string): Record<string, string> | null {
+  const params: Record<string, string> = {};
+
+  // Match /resumes/:id pattern
+  const resumeMatch = path.match(/^\/resumes\/([^/]+)$/);
+  if (resumeMatch) {
+    params.id = resumeMatch[1];
+    return params;
+  }
+
+  // Match /ai/:action pattern
+  const aiMatch = path.match(/^\/ai\/([^/]+)$/);
+  if (aiMatch) {
+    params.action = aiMatch[1];
+    return params;
+  }
+
+  // Match /render/:format pattern
+  const renderMatch = path.match(/^\/render\/([^/]+)$/);
+  if (renderMatch) {
+    params.format = renderMatch[1];
+    return params;
+  }
+
+  // Match /auth/social/:provider pattern
+  const socialMatch = path.match(/^\/auth\/social\/([^/]+)$/);
+  if (socialMatch) {
+    params.provider = socialMatch[1];
+    return params;
+  }
+
+  return Object.keys(params).length > 0 ? params : null;
+}
+
+/**
  * Convert Express request to Lambda event format
  */
 function createLambdaEvent(req: Request): APIGatewayProxyEvent {
@@ -51,7 +89,7 @@ function createLambdaEvent(req: Request): APIGatewayProxyEvent {
     queryStringParameters: req.query as Record<string, string>,
     body: JSON.stringify(req.body),
     isBase64Encoded: false,
-    pathParameters: null,
+    pathParameters: extractPathParams(req.path),
     stageVariables: null,
     resource: req.path,
     requestContext: {

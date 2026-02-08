@@ -17,9 +17,10 @@ interface AuthGuardProps {
 export function AuthGuard({ children, fallbackPath = "/auth/login" }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, loading, getAccessToken } = useAuth();
+  const { user, loading, getAccessToken, refreshAccessToken } = useAuth();
   const [validating, setValidating] = useState(true);
   const [isValid, setIsValid] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const validateSession = async () => {
@@ -51,22 +52,50 @@ export function AuthGuard({ children, fallbackPath = "/auth/login" }: AuthGuardP
 
         if (response.ok) {
           setIsValid(true);
+        } else if (response.status === 401 && retryCount < 1) {
+          // Token might be expired, try to refresh once
+          const refreshed = await refreshAccessToken();
+          if (refreshed) {
+            setRetryCount((prev) => prev + 1);
+            // Token refreshed, re-validate
+            return;
+          }
+          // Refresh failed, clear and redirect
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("user");
+          router.replace(`${fallbackPath}`);
         } else {
           // Invalid session, clear and redirect
           localStorage.removeItem("accessToken");
           localStorage.removeItem("user");
           router.replace(`${fallbackPath}`);
         }
-      } catch {
-        // Network error, still allow if we have local data
-        setIsValid(true);
+      } catch (error) {
+        console.error("Session validation error:", error);
+        // Network error - stay on page but show a warning state
+        // Only allow if we have both user and token (graceful degradation)
+        if (user && token) {
+          setIsValid(true);
+          console.warn("Network error during validation, allowing access with cached credentials");
+        } else {
+          router.replace(`${fallbackPath}`);
+        }
       } finally {
         setValidating(false);
       }
     };
 
     validateSession();
-  }, [user, loading, router, pathname, fallbackPath, getAccessToken]);
+  }, [
+    user,
+    loading,
+    router,
+    pathname,
+    fallbackPath,
+    getAccessToken,
+    refreshAccessToken,
+    retryCount,
+  ]);
 
   // Show loading state while checking auth
   if (loading || validating) {
@@ -144,11 +173,16 @@ export function GuestGuard({ children, fallbackPath = "/dashboard" }: GuestGuard
         } else {
           // Invalid session, clear local data and allow access
           localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
           localStorage.removeItem("user");
           setHasValidSession(false);
         }
       } catch {
-        // Network error, allow access to login
+        // Network error, clear stale data and allow access to login
+        // This is safer for guest guard - if we can't verify, let them log in fresh
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
         setHasValidSession(false);
       } finally {
         setValidating(false);

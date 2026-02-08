@@ -3,6 +3,23 @@ import { prisma } from "@yukti/database";
 import { authorizeRequest } from "../../utils/auth";
 import { ResumeSchema } from "@yukti/shared";
 
+// Standard headers for all responses
+const headers = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+};
+
+/**
+ * Look up internal user ID from Cognito ID
+ */
+async function getInternalUserId(cognitoId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { cognitoId },
+    select: { id: true },
+  });
+  return user?.id || null;
+}
+
 /**
  * Get all resumes for authenticated user
  */
@@ -21,17 +38,53 @@ async function getResumes(userId: string): Promise<APIGatewayProxyResult> {
 
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers,
       body: JSON.stringify({ resumes }),
     };
   } catch (error) {
     console.error("Error fetching resumes:", error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: "Failed to fetch resumes" }),
+    };
+  }
+}
+
+/**
+ * Get a single resume by ID
+ */
+async function getResumeById(userId: string, resumeId: string): Promise<APIGatewayProxyResult> {
+  try {
+    const resume = await prisma.resume.findFirst({
+      where: { id: resumeId, userId },
+      include: {
+        snapshots: {
+          orderBy: { version: "desc" },
+          take: 1,
+        },
+      },
+    });
+
+    if (!resume) {
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({ error: "Resume not found" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ resume }),
+    };
+  } catch (error) {
+    console.error("Error fetching resume:", error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: "Failed to fetch resume" }),
     };
   }
 }
@@ -67,16 +120,14 @@ async function createResume(
 
     return {
       statusCode: 201,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers,
       body: JSON.stringify({ resume }),
     };
   } catch (error) {
     console.error("Error creating resume:", error);
     return {
       statusCode: 400,
+      headers,
       body: JSON.stringify({
         error: "Failed to create resume",
         message: error instanceof Error ? error.message : "Unknown error",
@@ -108,6 +159,7 @@ async function updateResume(
     if (!existingResume) {
       return {
         statusCode: 404,
+        headers,
         body: JSON.stringify({ error: "Resume not found" }),
       };
     }
@@ -140,16 +192,14 @@ async function updateResume(
 
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers,
       body: JSON.stringify({ resume: updatedResume }),
     };
   } catch (error) {
     console.error("Error updating resume:", error);
     return {
       statusCode: 400,
+      headers,
       body: JSON.stringify({
         error: "Failed to update resume",
         message: error instanceof Error ? error.message : "Unknown error",
@@ -171,6 +221,7 @@ async function deleteResume(userId: string, resumeId: string): Promise<APIGatewa
     if (!resume) {
       return {
         statusCode: 404,
+        headers,
         body: JSON.stringify({ error: "Resume not found" }),
       };
     }
@@ -181,16 +232,14 @@ async function deleteResume(userId: string, resumeId: string): Promise<APIGatewa
 
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers,
       body: JSON.stringify({ message: "Resume deleted successfully" }),
     };
   } catch (error) {
     console.error("Error deleting resume:", error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: "Failed to delete resume" }),
     };
   }
@@ -208,22 +257,28 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   if (!auth.isAuthorized || !auth.userId) {
     return {
       statusCode: 401,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers,
       body: JSON.stringify({ error: auth.error || "Unauthorized" }),
     };
   }
 
-  const { userId } = auth;
+  // Convert Cognito ID to internal user ID
+  const userId = await getInternalUserId(auth.userId);
+  if (!userId) {
+    return {
+      statusCode: 401,
+      headers,
+      body: JSON.stringify({ error: "User not found in database" }),
+    };
+  }
+
   const resumeId = event.pathParameters?.id;
   const body = event.body ? JSON.parse(event.body) : {};
 
   // Route based on HTTP method and path
   switch (event.httpMethod) {
     case "GET":
-      return resumeId ? getResumes(userId) : getResumes(userId);
+      return resumeId ? getResumeById(userId, resumeId) : getResumes(userId);
 
     case "POST":
       return createResume(userId, body);
@@ -233,6 +288,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       if (!resumeId) {
         return {
           statusCode: 400,
+          headers,
           body: JSON.stringify({ error: "Resume ID required" }),
         };
       }
@@ -242,6 +298,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       if (!resumeId) {
         return {
           statusCode: 400,
+          headers,
           body: JSON.stringify({ error: "Resume ID required" }),
         };
       }
@@ -250,10 +307,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     default:
       return {
         statusCode: 405,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
+        headers,
         body: JSON.stringify({ error: "Method not allowed" }),
       };
   }
