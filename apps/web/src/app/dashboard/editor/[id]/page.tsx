@@ -45,7 +45,7 @@ export default function EditorPage() {
 
   async function fetchResume() {
     try {
-      const response = await apiClient.get(`/api/resumes/${resumeId}`);
+      const response = await apiClient.get(`/resumes/${resumeId}`);
       const data = response.data.resume;
       setTitle(data.title);
       if (data.snapshots?.[0]?.content) {
@@ -60,7 +60,7 @@ export default function EditorPage() {
     if (!resume || isSaving) return;
     setSaving(true);
     try {
-      await apiClient.put(`/api/resumes/${resumeId}`, {
+      await apiClient.put(`/resumes/${resumeId}`, {
         title,
         content: resume,
       });

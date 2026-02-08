@@ -11,6 +11,9 @@ export default function WorkForm() {
 
   const { work } = resume;
 
+  const inputClasses =
+    "px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400";
+
   const addWork = () => {
     const newWork: Work = {
       name: "",
@@ -99,28 +102,28 @@ export default function WorkForm() {
                   value={item.name}
                   onChange={(e) => updateWorkItem(index, { name: e.target.value })}
                   placeholder="Company Name"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className={inputClasses}
                 />
                 <input
                   type="text"
                   value={item.position}
                   onChange={(e) => updateWorkItem(index, { position: e.target.value })}
                   placeholder="Job Title"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className={inputClasses}
                 />
                 <input
                   type="text"
                   value={item.startDate}
                   onChange={(e) => updateWorkItem(index, { startDate: e.target.value })}
                   placeholder="Start Date (YYYY-MM)"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className={inputClasses}
                 />
                 <input
                   type="text"
                   value={item.endDate || ""}
                   onChange={(e) => updateWorkItem(index, { endDate: e.target.value })}
                   placeholder="End Date (or Present)"
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className={inputClasses}
                 />
               </div>
 
@@ -141,7 +144,7 @@ export default function WorkForm() {
                       value={highlight}
                       onChange={(e) => updateHighlight(index, hi, e.target.value)}
                       placeholder="Achievement or responsibility..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      className={`flex-1 ${inputClasses}`}
                     />
                     <button
                       onClick={() => removeHighlight(index, hi)}

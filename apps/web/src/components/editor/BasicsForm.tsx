@@ -2,6 +2,7 @@
 
 import { useResumeStore } from "@/stores/resumeStore";
 import { User, Mail, Phone, MapPin, Link as LinkIcon } from "lucide-react";
+import ProfilePhotoUploader from "./ProfilePhotoUploader";
 
 export default function BasicsForm() {
   const { resume, updateBasics } = useResumeStore();
@@ -10,12 +11,18 @@ export default function BasicsForm() {
 
   const { basics } = resume;
 
+  const inputClasses =
+    "w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400";
+
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
         <User className="w-5 h-5" />
         Personal Information
       </h2>
+
+      {/* Profile Photo Upload */}
+      <ProfilePhotoUploader value={basics.image} onChange={(url) => updateBasics({ image: url })} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -24,7 +31,7 @@ export default function BasicsForm() {
             type="text"
             value={basics.name || ""}
             onChange={(e) => updateBasics({ name: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className={inputClasses}
             placeholder="John Doe"
           />
         </div>
@@ -35,7 +42,7 @@ export default function BasicsForm() {
             type="text"
             value={basics.label || ""}
             onChange={(e) => updateBasics({ label: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className={inputClasses}
             placeholder="Software Engineer"
           />
         </div>
@@ -49,7 +56,7 @@ export default function BasicsForm() {
             type="email"
             value={basics.email || ""}
             onChange={(e) => updateBasics({ email: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className={inputClasses}
             placeholder="john@example.com"
           />
         </div>
@@ -63,7 +70,7 @@ export default function BasicsForm() {
             type="tel"
             value={basics.phone || ""}
             onChange={(e) => updateBasics({ phone: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className={inputClasses}
             placeholder="+1 (555) 000-0000"
           />
         </div>
@@ -85,7 +92,7 @@ export default function BasicsForm() {
                 },
               })
             }
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className={inputClasses}
             placeholder="San Francisco"
           />
         </div>
@@ -99,7 +106,7 @@ export default function BasicsForm() {
             type="url"
             value={basics.url || ""}
             onChange={(e) => updateBasics({ url: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className={inputClasses}
             placeholder="https://yourportfolio.com"
           />
         </div>
@@ -111,7 +118,7 @@ export default function BasicsForm() {
           rows={4}
           value={basics.summary || ""}
           onChange={(e) => updateBasics({ summary: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className={inputClasses}
           placeholder="Brief overview of your professional background and key strengths..."
         />
       </div>

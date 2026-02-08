@@ -13,6 +13,7 @@ import { handler as authHandler } from "./functions/auth/index";
 import { handler as resumesHandler } from "./functions/resumes/index";
 import { handler as aiHandler } from "./functions/ai/index";
 import { handler as renderHandler } from "./functions/render/index";
+import { handler as uploadsHandler } from "./functions/uploads/index";
 import type { APIGatewayProxyEvent } from "aws-lambda";
 
 const app = express();
@@ -172,6 +173,9 @@ app.all("/ai/*", lambdaWrapper(aiHandler));
 
 // Render routes
 app.all("/render/*", lambdaWrapper(renderHandler));
+
+// Upload routes
+app.all("/uploads/*", lambdaWrapper(uploadsHandler));
 
 const PORT = process.env.PORT || 9000;
 

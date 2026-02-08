@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Plus, FileText, Clock, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import apiClient from "@/lib/api-client";
+import TemplateSelectionModal from "@/components/templates/TemplateSelectionModal";
 
 interface Resume {
   id: string;
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   useEffect(() => {
     fetchResumes();
@@ -24,7 +26,7 @@ export default function DashboardPage() {
 
   async function fetchResumes() {
     try {
-      const response = await apiClient.get("/api/resumes");
+      const response = await apiClient.get("/resumes");
       setResumes(response.data.resumes);
     } catch (error) {
       console.error("Error fetching resumes:", error);
@@ -33,27 +35,9 @@ export default function DashboardPage() {
     }
   }
 
-  async function createResume() {
-    try {
-      const response = await apiClient.post("/api/resumes", {
-        title: "New Resume",
-        content: {
-          basics: {
-            name: user?.name || "",
-            email: user?.email || "",
-          },
-          work: [],
-          education: [],
-          skills: [],
-          projects: [],
-        },
-      });
-
-      // Navigate to editor
-      window.location.href = `/dashboard/editor/${response.data.resume.id}`;
-    } catch (error) {
-      console.error("Error creating resume:", error);
-    }
+  // Open template modal instead of directly creating
+  function handleNewResume() {
+    setShowTemplateModal(true);
   }
 
   return (
@@ -111,7 +95,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Your Resumes</h2>
             <button
-              onClick={createResume}
+              onClick={handleNewResume}
               className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
@@ -129,7 +113,7 @@ export default function DashboardPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">No resumes yet</h3>
               <p className="text-gray-600 mb-6">Create your first resume to get started</p>
               <button
-                onClick={createResume}
+                onClick={handleNewResume}
                 className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 Create Resume
@@ -162,6 +146,12 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Template Selection Modal */}
+      <TemplateSelectionModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+      />
     </DashboardLayout>
   );
 }

@@ -60,12 +60,14 @@ enum Plan {
 
 // Resume model - main resume entity
 model Resume {
-  id     String @id @default(uuid())
-  userId String
-  title  String @default("Untitled Resume")
+  id         String  @id @default(uuid())
+  userId     String
+  title      String  @default("Untitled Resume")
+  templateId String? // Reference to the template used
   
   // Relations
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template  ResumeTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
   snapshots ResumeSnapshot[]
   
   createdAt DateTime @default(now())
@@ -73,6 +75,39 @@ model Resume {
 
   @@index([userId])
   @@index([updatedAt])
+  @@index([templateId])
+}
+
+// ResumeTemplate - predefined templates for resume creation
+model ResumeTemplate {
+  id          String  @id @default(uuid())
+  slug        String  @unique // e.g., "it-developer-modern"
+  name        String  @unique // e.g., "Modern Professional"
+  description String? // Brief description of the template
+  category    String  // "professional", "creative", "minimal"
+  
+  // Template structure (JSON)
+  structure Json // Defines sections, order, visibility, layout
+  
+  // Styling information (JSON)
+  theme Json // Colors, fonts, spacing, etc.
+  
+  // Preview image (S3 URL for future use)
+  previewUrl String? // URL to template preview image
+  
+  // Metadata
+  isActive  Boolean @default(true)
+  isPremium Boolean @default(false)
+  sortOrder Int     @default(0)
+  
+  // Relations
+  resumes Resume[] // Resumes created using this template
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([category, isActive])
+  @@index([sortOrder])
 }
 
 // ResumeSnapshot - version history for resumes
