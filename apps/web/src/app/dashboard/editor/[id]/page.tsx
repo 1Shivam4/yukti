@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import apiClient from "@/lib/api-client";
 import BasicsForm from "@/components/editor/BasicsForm";
 import WorkForm from "@/components/editor/WorkForm";
-import ResumePreview from "@/components/editor/ResumePreview";
+import { TemplateRenderer } from "@/templates";
 import AIPanel from "@/components/editor/AIPanel";
 import ExportPanel from "@/components/editor/ExportPanel";
 import {
@@ -152,7 +152,7 @@ export default function EditorPage() {
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition
                   ${
                     activeTab === tab.id
-                      ? "text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50"
+                      ? "text-indigo-600 border-b-4 border-indigo-600 bg-indigo-50/50"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
               >
@@ -163,7 +163,7 @@ export default function EditorPage() {
           </div>
 
           {/* Form Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-8">
             {activeTab === "basics" && <BasicsForm />}
             {activeTab === "work" && <WorkForm />}
             {activeTab === "education" && (
@@ -176,9 +176,9 @@ export default function EditorPage() {
         </div>
 
         {/* Right Panel - Preview */}
-        <div className="w-1/2 overflow-y-auto bg-gray-200 p-6">
-          <div className="max-w-[8.5in] mx-auto shadow-xl rounded-lg overflow-hidden">
-            <ResumePreview />
+        <div className="w-1/2 overflow-y-auto bg-slate-50 p-8">
+          <div className="max-w-[8.5in] mx-auto shadow-lg border border-gray-200/50 rounded-sm overflow-hidden">
+            <TemplateRenderer resume={resume} templateId={resume.meta?.templateId} scale={0.75} />
           </div>
         </div>
       </div>

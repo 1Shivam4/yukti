@@ -28,8 +28,8 @@ export default function ExecutiveClassicTemplate({ resume, className = "" }: Tem
         <h1 className="text-3xl font-bold tracking-wide text-gray-900 uppercase">
           {basics.name || "Your Name"}
         </h1>
-        {basics.label && <p className="text-lg text-gray-600 mt-1 italic">{basics.label}</p>}
-        <div className="flex justify-center flex-wrap gap-x-3 mt-3 text-sm text-gray-600">
+        {basics.label && <p className="text-lg text-gray-800 mt-1 italic">{basics.label}</p>}
+        <div className="flex justify-center flex-wrap gap-x-3 mt-3 text-base text-gray-700">
           {basics.email && <span>{basics.email}</span>}
           {basics.phone && <span>|</span>}
           {basics.phone && <span>{basics.phone}</span>}
@@ -51,7 +51,7 @@ export default function ExecutiveClassicTemplate({ resume, className = "" }: Tem
           <h2 className="text-sm font-bold uppercase tracking-widest text-gray-800 border-b border-gray-300 pb-1 mb-3">
             Executive Summary
           </h2>
-          <p className="text-sm text-gray-700 leading-relaxed text-justify">{basics.summary}</p>
+          <p className="text-base text-gray-900 leading-relaxed text-justify">{basics.summary}</p>
         </section>
       )}
 
@@ -66,18 +66,18 @@ export default function ExecutiveClassicTemplate({ resume, className = "" }: Tem
               <div key={idx}>
                 <div className="flex justify-between items-baseline">
                   <h3 className="font-bold text-gray-900 uppercase">{job.position}</h3>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-700">
                     {job.startDate} — {job.endDate || "Present"}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 italic">{job.name}</p>
-                {job.summary && <p className="text-sm text-gray-600 mt-1">{job.summary}</p>}
+                <p className="text-base text-gray-800 italic">{job.name}</p>
+                {job.summary && <p className="text-base text-gray-800 mt-1">{job.summary}</p>}
                 {job.highlights.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {job.highlights.map(
                       (h, i) =>
                         h && (
-                          <li key={i} className="text-sm text-gray-700 flex items-start">
+                          <li key={i} className="text-base text-gray-900 flex items-start">
                             <span className="mr-2">•</span>
                             {h}
                           </li>
@@ -104,9 +104,9 @@ export default function ExecutiveClassicTemplate({ resume, className = "" }: Tem
                   <h3 className="font-bold text-gray-900">
                     {edu.studyType} in {edu.area}
                   </h3>
-                  <p className="text-sm text-gray-600 italic">{edu.institution}</p>
+                  <p className="text-base text-gray-800 italic">{edu.institution}</p>
                 </div>
-                <span className="text-sm text-gray-600">{edu.endDate || edu.startDate}</span>
+                <span className="text-sm text-gray-700">{edu.endDate || edu.startDate}</span>
               </div>
             ))}
           </div>
@@ -125,7 +125,7 @@ export default function ExecutiveClassicTemplate({ resume, className = "" }: Tem
               {skills
                 .flatMap((skill) => (skill.keywords.length > 0 ? skill.keywords : [skill.name]))
                 .map((item, idx) => (
-                  <span key={idx} className="text-sm text-gray-700">
+                  <span key={idx} className="text-base text-gray-900">
                     • {item}
                   </span>
                 ))}
@@ -142,7 +142,7 @@ export default function ExecutiveClassicTemplate({ resume, className = "" }: Tem
               </h2>
               <div className="space-y-1">
                 {certifications.map((cert, idx) => (
-                  <p key={idx} className="text-sm text-gray-700">
+                  <p key={idx} className="text-base text-gray-900">
                     {cert.name} — {cert.issuer}
                   </p>
                 ))}
@@ -157,7 +157,7 @@ export default function ExecutiveClassicTemplate({ resume, className = "" }: Tem
               </h2>
               <div className="space-y-1">
                 {awards.map((award, idx) => (
-                  <p key={idx} className="text-sm text-gray-700">
+                  <p key={idx} className="text-base text-gray-900">
                     {award.title} — {award.awarder} ({award.date})
                   </p>
                 ))}

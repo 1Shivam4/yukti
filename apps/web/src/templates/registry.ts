@@ -35,6 +35,7 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
   },
   {
     id: "business-executive-classic",
+    slug: "business-executive-classic",
     name: "Executive Classic",
     description:
       "Traditional professional layout with elegant typography. Ideal for managers, executives, and business professionals.",
@@ -59,6 +60,7 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
   },
   {
     id: "creative-designer-portfolio",
+    slug: "creative-designer-portfolio",
     name: "Designer Portfolio",
     description:
       "Modern creative layout with visual flair. Perfect for designers, artists, and creative professionals.",
@@ -83,6 +85,7 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
   },
   {
     id: "healthcare-medical-professional",
+    slug: "healthcare-medical-professional",
     name: "Medical Professional",
     description:
       "Clean, structured layout for healthcare workers. Emphasizes credentials, certifications, and clinical experience.",
@@ -115,6 +118,7 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
   },
   {
     id: "general-senior-professional",
+    slug: "general-senior-professional",
     name: "Senior Professional",
     description:
       "Versatile clean design suitable for any industry. Balanced layout with clear sections and modern typography.",

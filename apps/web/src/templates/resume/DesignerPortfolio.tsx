@@ -36,7 +36,7 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
             </span>
           </div>
           <h1 className="text-xl font-bold">{basics.name || "Your Name"}</h1>
-          {basics.label && <p className="text-purple-200 text-sm mt-1">{basics.label}</p>}
+          {basics.label && <p className="text-purple-100 text-base mt-1">{basics.label}</p>}
         </div>
 
         {/* Contact */}
@@ -44,7 +44,7 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
           <h2 className="text-xs font-bold uppercase tracking-widest border-b border-purple-400 pb-1 mb-3">
             Contact
           </h2>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 text-base">
             {basics.email && (
               <p className="flex items-center gap-2">
                 <span className="text-purple-300">✉</span>
@@ -81,11 +81,11 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
             <div className="space-y-3">
               {skills.map((skill, idx) => (
                 <div key={idx}>
-                  <h3 className="text-sm font-medium">{skill.name}</h3>
+                  <h3 className="text-base font-medium">{skill.name}</h3>
                   {skill.keywords.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {skill.keywords.map((kw, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-white/20 rounded text-xs">
+                        <span key={i} className="px-2 py-0.5 bg-white/20 rounded text-sm">
                           {kw}
                         </span>
                       ))}
@@ -105,10 +105,10 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
             </h2>
             <div className="space-y-3">
               {education.map((edu, idx) => (
-                <div key={idx} className="text-sm">
+                <div key={idx} className="text-base">
                   <h3 className="font-medium">{edu.studyType}</h3>
-                  <p className="text-purple-200 text-xs">{edu.institution}</p>
-                  <p className="text-purple-300 text-xs">{edu.endDate || edu.startDate}</p>
+                  <p className="text-purple-100 text-sm">{edu.institution}</p>
+                  <p className="text-purple-200 text-sm">{edu.endDate || edu.startDate}</p>
                 </div>
               ))}
             </div>
@@ -123,7 +123,7 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
             </h2>
             <div className="space-y-1">
               {basics.profiles.map((profile) => (
-                <p key={profile.network} className="text-sm text-purple-200">
+                <p key={profile.network} className="text-base text-purple-100">
                   {profile.network}: {profile.username}
                 </p>
               ))}
@@ -141,7 +141,7 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
               <span className="w-8 h-0.5 bg-pink-500 mr-2"></span>
               About Me
             </h2>
-            <p className="text-sm text-gray-700 leading-relaxed">{basics.summary}</p>
+            <p className="text-base text-gray-900 leading-relaxed">{basics.summary}</p>
           </section>
         )}
 
@@ -158,17 +158,17 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
                   <div className="absolute -left-1.5 top-0 w-3 h-3 rounded-full bg-pink-500"></div>
                   <div className="flex justify-between items-start">
                     <h3 className="font-bold text-gray-900">{job.position}</h3>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                    <span className="text-sm text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
                       {job.startDate} — {job.endDate || "Present"}
                     </span>
                   </div>
-                  <p className="text-sm text-purple-600">{job.name}</p>
+                  <p className="text-base text-purple-700">{job.name}</p>
                   {job.highlights.length > 0 && (
                     <ul className="mt-2 space-y-1">
                       {job.highlights.map(
                         (h, i) =>
                           h && (
-                            <li key={i} className="text-sm text-gray-600 flex items-start">
+                            <li key={i} className="text-base text-gray-900 flex items-start">
                               <span className="text-pink-500 mr-2">→</span>
                               {h}
                             </li>
@@ -192,14 +192,14 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
             <div className="grid grid-cols-2 gap-3">
               {projects.map((project, idx) => (
                 <div key={idx} className="p-3 border border-purple-100 rounded-lg bg-purple-50/50">
-                  <h3 className="font-bold text-sm text-gray-900">{project.name}</h3>
+                  <h3 className="font-bold text-base text-gray-900">{project.name}</h3>
                   {project.description && (
-                    <p className="text-xs text-gray-600 mt-1">{project.description}</p>
+                    <p className="text-sm text-gray-800 mt-1">{project.description}</p>
                   )}
                   {project.keywords.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {project.keywords.slice(0, 3).map((kw, i) => (
-                        <span key={i} className="text-xs text-purple-600">
+                        <span key={i} className="text-sm text-purple-700">
                           {kw}
                         </span>
                       ))}
@@ -220,11 +220,11 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
             </h2>
             <div className="space-y-2">
               {awards.map((award, idx) => (
-                <div key={idx} className="flex items-center text-sm">
+                <div key={idx} className="flex items-center text-base">
                   <span className="text-yellow-500 mr-2">★</span>
-                  <span className="font-medium text-gray-800">{award.title}</span>
+                  <span className="font-medium text-gray-900">{award.title}</span>
                   <span className="text-gray-400 mx-2">—</span>
-                  <span className="text-gray-600">{award.awarder}</span>
+                  <span className="text-gray-800">{award.awarder}</span>
                 </div>
               ))}
             </div>

@@ -25,8 +25,8 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
       {/* Header */}
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">{basics.name || "Your Name"}</h1>
-        {basics.label && <p className="text-lg text-gray-600 mt-1">{basics.label}</p>}
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-gray-600">
+        {basics.label && <p className="text-lg text-gray-800 mt-1">{basics.label}</p>}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-base text-gray-700">
           {basics.email && <span>{basics.email}</span>}
           {basics.phone && <span>|</span>}
           {basics.phone && <span>{basics.phone}</span>}
@@ -50,7 +50,7 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
       {basics.summary && (
         <section className="mb-5">
           <h2 className="text-sm font-bold uppercase tracking-wider text-gray-800 mb-2">Summary</h2>
-          <p className="text-sm text-gray-700 leading-relaxed">{basics.summary}</p>
+          <p className="text-base text-gray-900 leading-relaxed">{basics.summary}</p>
         </section>
       )}
 
@@ -66,9 +66,9 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold text-gray-900">{job.position}</h3>
-                    <p className="text-sm text-gray-600">{job.name}</p>
+                    <p className="text-base text-gray-800">{job.name}</p>
                   </div>
-                  <span className="text-sm text-gray-500 whitespace-nowrap">
+                  <span className="text-sm text-gray-700 whitespace-nowrap">
                     {job.startDate} — {job.endDate || "Present"}
                   </span>
                 </div>
@@ -77,7 +77,7 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
                     {job.highlights.map(
                       (h, i) =>
                         h && (
-                          <li key={i} className="text-sm text-gray-700 flex items-start">
+                          <li key={i} className="text-base text-gray-900 flex items-start">
                             <span className="text-sky-500 mr-2 font-bold">►</span>
                             {h}
                           </li>
@@ -98,9 +98,11 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
           <div className="flex flex-wrap gap-2">
             {skills.map((skill, idx) => (
               <div key={idx} className="flex items-center">
-                <span className="font-medium text-sm text-gray-800">{skill.name}</span>
+                <span className="font-medium text-base text-gray-900">{skill.name}</span>
                 {skill.keywords.length > 0 && (
-                  <span className="text-sm text-gray-600 ml-1">({skill.keywords.join(", ")})</span>
+                  <span className="text-base text-gray-800 ml-1">
+                    ({skill.keywords.join(", ")})
+                  </span>
                 )}
                 {idx < skills.length - 1 && <span className="text-gray-300 ml-2">•</span>}
               </div>
@@ -120,11 +122,11 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
             <div className="space-y-2">
               {education.map((edu, idx) => (
                 <div key={idx}>
-                  <h3 className="font-semibold text-sm text-gray-900">
+                  <h3 className="font-semibold text-base text-gray-900">
                     {edu.studyType} in {edu.area}
                   </h3>
-                  <p className="text-sm text-gray-600">{edu.institution}</p>
-                  <p className="text-xs text-gray-500">{edu.endDate || edu.startDate}</p>
+                  <p className="text-base text-gray-800">{edu.institution}</p>
+                  <p className="text-sm text-gray-700">{edu.endDate || edu.startDate}</p>
                 </div>
               ))}
             </div>
@@ -142,9 +144,9 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
             <div className="space-y-2">
               {projects.slice(0, 3).map((project, idx) => (
                 <div key={idx}>
-                  <h3 className="font-semibold text-sm text-gray-900">{project.name}</h3>
+                  <h3 className="font-semibold text-base text-gray-900">{project.name}</h3>
                   {project.description && (
-                    <p className="text-xs text-gray-600">{project.description}</p>
+                    <p className="text-sm text-gray-800">{project.description}</p>
                   )}
                 </div>
               ))}
@@ -163,7 +165,7 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
           </h2>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             {certifications.map((cert, idx) => (
-              <span key={idx} className="text-sm text-gray-700">
+              <span key={idx} className="text-base text-gray-900">
                 {cert.name} <span className="text-gray-400">({cert.issuer})</span>
               </span>
             ))}

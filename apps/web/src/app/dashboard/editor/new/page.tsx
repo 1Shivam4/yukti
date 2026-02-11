@@ -133,7 +133,7 @@ function NewEditorContent() {
           {/* Font Selector */}
           <FontSelector value={fontFamily} onChange={setFontFamily} />
 
-          <div className="w-px h-6 bg-gray-200" />
+          <div className="w-px h-8 bg-gray-300" />
 
           <button
             onClick={createResume}
@@ -159,7 +159,7 @@ function NewEditorContent() {
                 className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition whitespace-nowrap
                   ${
                     activeTab === tab.id
-                      ? "text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50"
+                      ? "text-indigo-600 border-b-4 border-indigo-600 bg-indigo-50/50"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
               >
@@ -170,7 +170,7 @@ function NewEditorContent() {
           </div>
 
           {/* Form Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-8">
             {activeTab === "basics" && <BasicsForm />}
             {activeTab === "work" && <WorkForm />}
             {activeTab === "education" && (
@@ -191,10 +191,10 @@ function NewEditorContent() {
         </div>
 
         {/* Right Panel - Template Preview */}
-        <div className="w-1/2 overflow-y-auto bg-gray-200 p-6">
-          <div className="max-w-[210mm] mx-auto shadow-2xl">
+        <div className="w-1/2 overflow-y-auto bg-slate-50 p-8">
+          <div className="max-w-[210mm] mx-auto shadow-lg border border-gray-200/50 rounded-sm">
             <div id="resume-preview-container">
-              <TemplateRenderer resume={resume} templateId={templateId} scale={0.85} />
+              <TemplateRenderer resume={resume} templateId={templateId} scale={0.75} />
             </div>
           </div>
         </div>
