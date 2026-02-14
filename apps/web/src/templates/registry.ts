@@ -19,11 +19,11 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
     layout: "two-column",
     thumbnail: "/templates/it-developer-modern.png",
     colors: {
-      primary: "#1e293b", // Dark slate for headers
-      secondary: "#64748b", // Muted gray for subtitles
-      accent: "#3b82f6", // Blue for highlights
+      primary: "#1e293b", // Dark slate
+      secondary: "#52525b", // Neutral gray
+      accent: "#9333ea", // Elegant deep violet accent
       background: "#ffffff",
-      text: "#1f2937",
+      text: "#0f172a",
     },
     fonts: {
       heading: "Roboto",
@@ -44,11 +44,11 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
     layout: "single-column",
     thumbnail: "/templates/business-executive-classic.png",
     colors: {
-      primary: "#1f2937",
-      secondary: "#4b5563",
-      accent: "#1e40af",
+      primary: "#1e293b", // Dark slate
+      secondary: "#52525b", // Neutral gray
+      accent: "#9333ea", // Elegant deep violet accent
       background: "#ffffff",
-      text: "#111827",
+      text: "#0f172a",
     },
     fonts: {
       heading: "Times New Roman",
@@ -69,11 +69,11 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
     layout: "sidebar-left",
     thumbnail: "/templates/creative-designer-portfolio.png",
     colors: {
-      primary: "#7c3aed", // Purple accent
-      secondary: "#6b7280",
-      accent: "#ec4899", // Pink highlight
+      primary: "#1e293b", // Dark slate
+      secondary: "#52525b", // Neutral gray
+      accent: "#9333ea", // Elegant deep violet accent
       background: "#ffffff",
-      text: "#1f2937",
+      text: "#0f172a",
     },
     fonts: {
       heading: "Montserrat",
@@ -94,11 +94,11 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
     layout: "single-column",
     thumbnail: "/templates/healthcare-medical-professional.png",
     colors: {
-      primary: "#0369a1", // Medical blue
-      secondary: "#64748b",
-      accent: "#0891b2", // Teal accent
+      primary: "#1e293b", // Dark slate
+      secondary: "#52525b", // Neutral gray
+      accent: "#9333ea", // Elegant deep violet accent
       background: "#ffffff",
-      text: "#1e293b",
+      text: "#0f172a",
     },
     fonts: {
       heading: "Arial",
@@ -127,11 +127,11 @@ export const RESUME_TEMPLATES: ResumeTemplate[] = [
     layout: "single-column",
     thumbnail: "/templates/general-senior-professional.png",
     colors: {
-      primary: "#0f172a",
-      secondary: "#475569",
-      accent: "#0ea5e9",
+      primary: "#1e293b", // Dark slate
+      secondary: "#52525b", // Neutral gray
+      accent: "#9333ea", // Elegant deep violet accent
       background: "#ffffff",
-      text: "#1e293b",
+      text: "#0f172a",
     },
     fonts: {
       heading: "Inter",

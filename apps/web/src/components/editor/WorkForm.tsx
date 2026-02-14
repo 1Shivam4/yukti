@@ -12,7 +12,7 @@ export default function WorkForm() {
   const { work } = resume;
 
   const inputClasses =
-    "px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400";
+    "w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-gray-400 transition-colors";
 
   const addWork = () => {
     const newWork: Work = {
@@ -66,73 +66,105 @@ export default function WorkForm() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Briefcase className="w-5 h-5" />
+          <Briefcase className="w-5 h-5 text-indigo-600" />
           Work Experience
         </h2>
         <button
           onClick={addWork}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add
+          Add Experience
         </button>
       </div>
 
       {work.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">
-          No work experience added yet. Click &quot;Add&quot; to get started.
-        </p>
+        <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl">
+          <Briefcase className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">No work experience added yet.</p>
+          <button
+            onClick={addWork}
+            className="mt-3 text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+          >
+            + Add your first experience
+          </button>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {work.map((item, index) => (
-            <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex items-start justify-between mb-4">
-                <span className="text-sm font-medium text-gray-500">Experience {index + 1}</span>
+            <div
+              key={index}
+              className="p-5 bg-gray-50/80 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Experience {index + 1}
+                </span>
                 <button
                   onClick={() => removeWork(index)}
-                  className="text-red-500 hover:text-red-700"
+                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Remove"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input
-                  type="text"
-                  value={item.name}
-                  onChange={(e) => updateWorkItem(index, { name: e.target.value })}
-                  placeholder="Company Name"
-                  className={inputClasses}
-                />
-                <input
-                  type="text"
-                  value={item.position}
-                  onChange={(e) => updateWorkItem(index, { position: e.target.value })}
-                  placeholder="Job Title"
-                  className={inputClasses}
-                />
-                <input
-                  type="text"
-                  value={item.startDate}
-                  onChange={(e) => updateWorkItem(index, { startDate: e.target.value })}
-                  placeholder="Start Date (YYYY-MM)"
-                  className={inputClasses}
-                />
-                <input
-                  type="text"
-                  value={item.endDate || ""}
-                  onChange={(e) => updateWorkItem(index, { endDate: e.target.value })}
-                  placeholder="End Date (or Present)"
-                  className={inputClasses}
-                />
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    value={item.name}
+                    onChange={(e) => updateWorkItem(index, { name: e.target.value })}
+                    placeholder="Google, Amazon..."
+                    className={inputClasses}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                    Job Title
+                  </label>
+                  <input
+                    type="text"
+                    value={item.position}
+                    onChange={(e) => updateWorkItem(index, { position: e.target.value })}
+                    placeholder="Senior Software Engineer"
+                    className={inputClasses}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                    Start Date
+                  </label>
+                  <input
+                    type="text"
+                    value={item.startDate}
+                    onChange={(e) => updateWorkItem(index, { startDate: e.target.value })}
+                    placeholder="2022-01"
+                    className={inputClasses}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">End Date</label>
+                  <input
+                    type="text"
+                    value={item.endDate || ""}
+                    onChange={(e) => updateWorkItem(index, { endDate: e.target.value })}
+                    placeholder="Present"
+                    className={inputClasses}
+                  />
+                </div>
               </div>
 
+              {/* Highlights / Bullet Points */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Highlights</span>
+                  <label className="text-xs font-medium text-gray-600">Key Achievements</label>
                   <button
                     onClick={() => addHighlight(index)}
-                    className="text-xs text-indigo-600 hover:text-indigo-800"
+                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                   >
                     + Add bullet
                   </button>
@@ -143,14 +175,14 @@ export default function WorkForm() {
                       type="text"
                       value={highlight}
                       onChange={(e) => updateHighlight(index, hi, e.target.value)}
-                      placeholder="Achievement or responsibility..."
+                      placeholder="Achieved X by doing Y, resulting in Z..."
                       className={`flex-1 ${inputClasses}`}
                     />
                     <button
                       onClick={() => removeHighlight(index, hi)}
-                      className="text-gray-400 hover:text-red-500"
+                      className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}

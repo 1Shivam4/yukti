@@ -55,6 +55,8 @@ interface ResumeState {
   updateEducation: (education: Resume["education"]) => void;
   updateSkills: (skills: Resume["skills"]) => void;
   updateProjects: (projects: Resume["projects"]) => void;
+  updateCertifications: (certifications: Resume["certifications"]) => void;
+  updateLanguages: (languages: Resume["languages"]) => void;
   updateMeta: (meta: Partial<ResumeMeta>) => void;
   markSaved: () => void;
   setSaving: (saving: boolean) => void;
@@ -98,6 +100,18 @@ export const useResumeStore = create<ResumeState>((set) => ({
   updateProjects: (projects) =>
     set((state) => ({
       resume: { ...state.resume, projects },
+      isDirty: true,
+    })),
+
+  updateCertifications: (certifications) =>
+    set((state) => ({
+      resume: { ...state.resume, certifications },
+      isDirty: true,
+    })),
+
+  updateLanguages: (languages) =>
+    set((state) => ({
+      resume: { ...state.resume, languages },
       isDirty: true,
     })),
 

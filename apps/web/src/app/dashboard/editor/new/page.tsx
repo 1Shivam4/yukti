@@ -1,6 +1,6 @@
 /**
  * New Resume Editor Page
- * Handles creating a new resume with a selected template
+ * Creates a new resume with a selected template - polished split-panel editor
  */
 
 "use client";
@@ -12,46 +12,62 @@ import { useAuth } from "@/contexts/AuthContext";
 import apiClient from "@/lib/api-client";
 import BasicsForm from "@/components/editor/BasicsForm";
 import WorkForm from "@/components/editor/WorkForm";
+import EducationForm from "@/components/editor/EducationForm";
+import SkillsForm from "@/components/editor/SkillsForm";
+import ProjectsForm from "@/components/editor/ProjectsForm";
+import CertificationsForm from "@/components/editor/CertificationsForm";
 import { TemplateRenderer } from "@/templates";
-import { getTemplateById, RESUME_TEMPLATES } from "@/templates/registry";
+import { getTemplateById } from "@/templates/registry";
 import FontSelector from "@/components/templates/FontSelector";
 import TemplateSwitcher from "@/components/templates/TemplateSwitcher";
 import type { FontFamily } from "@yukti/shared";
 import {
   ArrowLeft,
   Save,
-  Download,
-  Sparkles,
   User,
   Briefcase,
   GraduationCap,
   Wrench,
   FolderOpen,
   Award,
-  Languages,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 
 type EditorTab = "basics" | "work" | "education" | "skills" | "projects" | "certifications";
+
+const TABS: { id: EditorTab; label: string; icon: typeof User; description: string }[] = [
+  { id: "basics", label: "Basics", icon: User, description: "Personal info & summary" },
+  { id: "work", label: "Experience", icon: Briefcase, description: "Work history" },
+  { id: "education", label: "Education", icon: GraduationCap, description: "Academic background" },
+  { id: "skills", label: "Skills", icon: Wrench, description: "Technical & soft skills" },
+  { id: "projects", label: "Projects", icon: FolderOpen, description: "Notable projects" },
+  { id: "certifications", label: "Certifications", icon: Award, description: "Professional certs" },
+];
 
 function NewEditorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { resume, setResume, updateMeta, isDirty, isSaving, setSaving, markSaved } =
-    useResumeStore();
+  const { resume, initEmpty, updateMeta, isDirty, isSaving } = useResumeStore();
 
   const [activeTab, setActiveTab] = useState<EditorTab>("basics");
   const [title, setTitle] = useState("Untitled Resume");
   const [templateId, setTemplateId] = useState<string>("general-senior-professional");
   const [fontFamily, setFontFamily] = useState<FontFamily>("Inter");
   const [isCreating, setIsCreating] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Reset store on mount for fresh new resume
+  useEffect(() => {
+    initEmpty();
+  }, [initEmpty]);
 
   // Get template from URL params
   useEffect(() => {
     const urlTemplateId = searchParams.get("templateId");
     if (urlTemplateId) {
       setTemplateId(urlTemplateId);
-      // Set default font from template
       const template = getTemplateById(urlTemplateId);
       if (template) {
         setFontFamily(template.fonts.heading as FontFamily);
@@ -75,55 +91,65 @@ function NewEditorContent() {
       });
 
       const newResumeId = response.data.resume.id;
-      markSaved();
-
-      // Navigate to the persisted resume editor
-      router.replace(`/dashboard/editor/${newResumeId}`);
+      useResumeStore.getState().markSaved();
+      setSaveSuccess(true);
+      setTimeout(() => {
+        router.replace(`/dashboard/editor/${newResumeId}`);
+      }, 500);
     } catch (error) {
       console.error("Error creating resume:", error);
     } finally {
       setIsCreating(false);
     }
-  }, [resume, title, isCreating, isSaving, router, markSaved]);
+  }, [resume, title, isCreating, isSaving, router]);
 
   const handleTemplateChange = (newTemplateId: string) => {
     setTemplateId(newTemplateId);
-    // Update font to template default
     const template = getTemplateById(newTemplateId);
     if (template) {
       setFontFamily(template.fonts.heading as FontFamily);
     }
   };
 
-  const tabs = [
-    { id: "basics" as EditorTab, label: "Basics", icon: User },
-    { id: "work" as EditorTab, label: "Work", icon: Briefcase },
-    { id: "education" as EditorTab, label: "Education", icon: GraduationCap },
-    { id: "skills" as EditorTab, label: "Skills", icon: Wrench },
-    { id: "projects" as EditorTab, label: "Projects", icon: FolderOpen },
-    { id: "certifications" as EditorTab, label: "Certs", icon: Award },
-  ];
+  const renderForm = () => {
+    switch (activeTab) {
+      case "basics":
+        return <BasicsForm />;
+      case "work":
+        return <WorkForm />;
+      case "education":
+        return <EducationForm />;
+      case "skills":
+        return <SkillsForm />;
+      case "projects":
+        return <ProjectsForm />;
+      case "certifications":
+        return <CertificationsForm />;
+      default:
+        return <BasicsForm />;
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
       {/* Top Bar */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <header className="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push("/dashboard/templates")}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-            title="Back to templates"
+            onClick={() => router.push("/dashboard")}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Back to dashboard"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
+          <div className="w-px h-6 bg-gray-200" />
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-2 py-1"
+            className="text-lg font-semibold bg-transparent border border-transparent hover:border-gray-300 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 rounded-lg px-3 py-1.5 transition-all max-w-[280px]"
             placeholder="Resume Title"
           />
-          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">New</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -133,15 +159,33 @@ function NewEditorContent() {
           {/* Font Selector */}
           <FontSelector value={fontFamily} onChange={setFontFamily} />
 
-          <div className="w-px h-8 bg-gray-300" />
+          <div className="w-px h-8 bg-gray-200" />
 
           <button
             onClick={createResume}
             disabled={isCreating}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition"
+            className={`flex items-center gap-2 px-5 py-2 rounded-lg font-medium text-sm transition-all ${
+              saveSuccess
+                ? "bg-emerald-600 text-white"
+                : "bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+            }`}
           >
-            <Save className="w-4 h-4" />
-            {isCreating ? "Creating..." : "Save Resume"}
+            {isCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Creating...
+              </>
+            ) : saveSuccess ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                Created!
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Save Resume
+              </>
+            )}
           </button>
         </div>
       </header>
@@ -149,50 +193,47 @@ function NewEditorContent() {
       {/* Main Content - Split View */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Editor */}
-        <div className="w-1/2 flex flex-col bg-white border-r border-gray-200">
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition whitespace-nowrap
-                  ${
-                    activeTab === tab.id
-                      ? "text-indigo-600 border-b-4 border-indigo-600 bg-indigo-50/50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+        <div className="w-[48%] flex flex-col bg-white border-r border-gray-200">
+          {/* Section Tabs */}
+          <div className="flex border-b border-gray-200 overflow-x-auto scrollbar-hide">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all border-b-2 ${
+                    isActive
+                      ? "text-indigo-600 border-indigo-600 bg-indigo-50/40"
+                      : "text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-50"
                   }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
+                >
+                  <tab.icon
+                    className={`w-4 h-4 ${isActive ? "text-indigo-600" : "text-gray-400"}`}
+                  />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Form Content */}
-          <div className="flex-1 overflow-y-auto p-8">
-            {activeTab === "basics" && <BasicsForm />}
-            {activeTab === "work" && <WorkForm />}
-            {activeTab === "education" && (
-              <div className="text-center text-gray-500 py-12">Education form coming soon...</div>
-            )}
-            {activeTab === "skills" && (
-              <div className="text-center text-gray-500 py-12">Skills form coming soon...</div>
-            )}
-            {activeTab === "projects" && (
-              <div className="text-center text-gray-500 py-12">Projects form coming soon...</div>
-            )}
-            {activeTab === "certifications" && (
-              <div className="text-center text-gray-500 py-12">
-                Certifications form coming soon...
-              </div>
-            )}
-          </div>
+          <div className="flex-1 overflow-y-auto p-6">{renderForm()}</div>
         </div>
 
-        {/* Right Panel - Template Preview */}
-        <div className="w-1/2 overflow-y-auto bg-slate-50 p-8">
-          <div className="max-w-[210mm] mx-auto shadow-lg border border-gray-200/50 rounded-sm">
+        {/* Right Panel - Live Preview */}
+        <div className="w-[52%] overflow-y-auto bg-gradient-to-br from-slate-100 to-slate-50 p-6">
+          <div className="sticky top-0 z-10 mb-4">
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Live Preview
+              </h3>
+              <span className="text-xs text-gray-400">
+                A4 Paper · {getTemplateById(templateId)?.name || "Senior Professional"}
+              </span>
+            </div>
+          </div>
+          <div className="max-w-[210mm] mx-auto shadow-xl border border-gray-200/60 rounded bg-white">
             <div id="resume-preview-container">
               <TemplateRenderer resume={resume} templateId={templateId} scale={0.75} />
             </div>
@@ -209,8 +250,8 @@ export default function NewEditorPage() {
       fallback={
         <div className="h-screen flex items-center justify-center bg-gray-100">
           <div className="text-center">
-            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading editor...</p>
+            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-500 text-sm">Loading editor...</p>
           </div>
         </div>
       }

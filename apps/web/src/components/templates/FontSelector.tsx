@@ -38,11 +38,13 @@ export default function FontSelector({ value, onChange, className = "" }: FontSe
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors text-sm"
       >
-        <Type size={16} className="text-gray-500" />
-        <span style={{ fontFamily: selectedFont.family }}>{selectedFont.id}</span>
+        <Type size={16} className="text-gray-700" />
+        <span style={{ fontFamily: selectedFont.family }} className="text-gray-500">
+          {selectedFont.id}
+        </span>
         <ChevronDown
           size={14}
-          className={`text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`text-gray-700 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 

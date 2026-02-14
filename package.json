@@ -2,7 +2,7 @@
   "name": "yukti",
   "devDependencies": {
     "prettier": "^3.2.5",
-    "turbo": "^2.3.0",
+    "turbo": "^2.8.5",
     "typescript": "^5.7.2"
   },
   "engines": {

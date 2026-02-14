@@ -20,10 +20,12 @@ export default function DeveloperModernTemplate({ resume, className = "" }: Temp
   return (
     <div className={`bg-white min-h-[297mm] w-[210mm] mx-auto ${className}`} style={{ fontFamily }}>
       {/* Header - Full Width */}
-      <header className="bg-slate-800 text-white px-8 py-6">
-        <h1 className="text-3xl font-bold tracking-tight">{basics.name || "Your Name"}</h1>
-        {basics.label && <p className="text-lg text-slate-300 mt-1">{basics.label}</p>}
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-base text-slate-200">
+      <header className="px-8 py-6">
+        <h1 className="text-3xl font-bold tracking-tight text-black">
+          {basics.name || "Your Name"}
+        </h1>
+        {basics.label && <p className="text-lg text-slate-800 mt-1">{basics.label}</p>}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-base text-slate-800">
           {basics.email && <span>{basics.email}</span>}
           {basics.phone && <span>• {basics.phone}</span>}
           {basics.location?.city && <span>• {basics.location.city}</span>}
@@ -134,7 +136,7 @@ export default function DeveloperModernTemplate({ resume, className = "" }: Temp
         </main>
 
         {/* Sidebar - Right (35%) */}
-        <aside className="w-[35%] bg-slate-50 p-6 pl-4">
+        <aside className="p-6 pl-4">
           {/* Technical Skills */}
           {skills.length > 0 && (
             <section className="mb-5">

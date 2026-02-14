@@ -51,11 +51,11 @@ export default function TemplateSwitcher({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors text-sm"
       >
-        <LayoutTemplate size={16} className="text-gray-500" />
-        <span>{selectedTemplate.name}</span>
+        <LayoutTemplate size={16} className="text-gray-700" />
+        <span className="text-gray-600">{selectedTemplate.name}</span>
         <ChevronDown
           size={14}
-          className={`text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`text-gray-700 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
