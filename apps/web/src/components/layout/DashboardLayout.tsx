@@ -1,15 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileText, Sparkles, Settings, LogOut, Menu } from "lucide-react";
+import { FileText, Sparkles, Settings, LogOut, Menu, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await signOut();
+      sessionStorage.removeItem("auth_validated_at");
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Sign out error:", error);
+      sessionStorage.removeItem("auth_validated_at");
+      // Force redirect even if API call fails since localStorage is cleared
+      router.push("/auth/login");
+    }
+  };
 
   const navigation = [
     { name: "My Resumes", href: "/dashboard", icon: FileText },
@@ -69,11 +86,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Sign out */}
           <div className="p-4 border-t border-gray-200">
             <button
-              onClick={() => signOut()}
-              className="flex items-center gap-3 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="flex items-center gap-3 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
             >
-              <LogOut className="w-5 h-5" />
-              Sign Out
+              {signingOut ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <LogOut className="w-5 h-5" />
+              )}
+              {signingOut ? "Signing out..." : "Sign Out"}
             </button>
           </div>
         </div>

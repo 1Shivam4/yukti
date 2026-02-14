@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles, FileText, Download, Zap, Shield, Clock } from "lucide-react";
+import { Sparkles, FileText, Download, Zap, Shield, Clock, Menu, X } from "lucide-react";
+import { useState } from "react";
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
       {/* Navigation */}
@@ -12,12 +15,14 @@ export default function LandingPage() {
           <Link href="/" className="text-2xl font-bold text-indigo-600">
             Yukti
           </Link>
-          <div className="flex items-center gap-6">
+
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-6">
             <Link href="#features" className="text-gray-600 hover:text-gray-900 transition">
               Features
             </Link>
-            <Link href="#pricing" className="text-gray-600 hover:text-gray-900 transition">
-              Pricing
+            <Link href="#how-it-works" className="text-gray-600 hover:text-gray-900 transition">
+              How It Works
             </Link>
             <Link
               href="/auth/login"
@@ -26,7 +31,46 @@ export default function LandingPage() {
               Get Started
             </Link>
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+          >
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6 text-gray-600" />
+            ) : (
+              <Menu className="w-6 h-6 text-gray-600" />
+            )}
+          </button>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-100 px-6 py-4 space-y-3">
+            <Link
+              href="#features"
+              className="block text-gray-600 hover:text-gray-900 transition py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Features
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="block text-gray-600 hover:text-gray-900 transition py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              How It Works
+            </Link>
+            <Link
+              href="/auth/login"
+              className="block w-full text-center px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Get Started
+            </Link>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -55,7 +99,7 @@ export default function LandingPage() {
               Start Building Free
             </Link>
             <Link
-              href="#features"
+              href="#how-it-works"
               className="px-8 py-4 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition font-semibold text-lg border border-gray-200"
             >
               See How It Works
@@ -132,6 +176,49 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <p className="text-lg text-gray-600">Three simple steps to your perfect resume</p>
+          </div>
+
+          <div className="space-y-8">
+            {[
+              {
+                step: "1",
+                title: "Choose a Template",
+                desc: "Pick from our collection of professionally designed, ATS-optimized resume templates.",
+              },
+              {
+                step: "2",
+                title: "Fill in Your Details",
+                desc: "Use our split-view editor to add your experience, skills, and education with real-time preview.",
+              },
+              {
+                step: "3",
+                title: "Download & Apply",
+                desc: "Export to PDF or DOCX and start applying to your dream jobs with confidence.",
+              },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="flex items-start gap-6 bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-md transition"
+              >
+                <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
+                  {item.step}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.title}</h3>
+                  <p className="text-gray-600">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-12 shadow-xl">
@@ -153,15 +240,15 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="py-12 px-6 bg-gray-50 border-t border-gray-100">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-gray-600">© 2024 Yukti. Built with ❤️ for job seekers.</div>
+          <div className="text-gray-600">© 2026 Yukti. Built with ❤️ for job seekers.</div>
           <div className="flex items-center gap-6 text-sm text-gray-500">
-            <Link href="#" className="hover:text-gray-900">
+            <Link href="/privacy" className="hover:text-gray-900 transition">
               Privacy
             </Link>
-            <Link href="#" className="hover:text-gray-900">
+            <Link href="/terms" className="hover:text-gray-900 transition">
               Terms
             </Link>
-            <Link href="#" className="hover:text-gray-900">
+            <Link href="mailto:support@yukti.com" className="hover:text-gray-900 transition">
               Contact
             </Link>
           </div>

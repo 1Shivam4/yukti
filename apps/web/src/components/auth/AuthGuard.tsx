@@ -34,12 +34,23 @@ export function AuthGuard({ children, fallbackPath = "/auth/login" }: AuthGuardP
         return;
       }
 
-      // User exists, validate token with API
+      // User exists, check for token
       const token = getAccessToken();
       if (!token) {
         router.replace(`${fallbackPath}`);
         setValidating(false);
         return;
+      }
+
+      // Skip API re-validation if we recently validated (within 5 minutes)
+      const lastValidated = sessionStorage.getItem("auth_validated_at");
+      if (lastValidated) {
+        const elapsed = Date.now() - parseInt(lastValidated, 10);
+        if (elapsed < 5 * 60 * 1000) {
+          setIsValid(true);
+          setValidating(false);
+          return;
+        }
       }
 
       try {
@@ -52,6 +63,7 @@ export function AuthGuard({ children, fallbackPath = "/auth/login" }: AuthGuardP
 
         if (response.ok) {
           setIsValid(true);
+          sessionStorage.setItem("auth_validated_at", Date.now().toString());
         } else if (response.status === 401 && retryCount < 1) {
           // Token might be expired, try to refresh once
           const refreshed = await refreshAccessToken();
@@ -63,11 +75,13 @@ export function AuthGuard({ children, fallbackPath = "/auth/login" }: AuthGuardP
           // Refresh failed, clear and redirect
           localStorage.removeItem("accessToken");
           localStorage.removeItem("user");
+          sessionStorage.removeItem("auth_validated_at");
           router.replace(`${fallbackPath}`);
         } else {
           // Invalid session, clear and redirect
           localStorage.removeItem("accessToken");
           localStorage.removeItem("user");
+          sessionStorage.removeItem("auth_validated_at");
           router.replace(`${fallbackPath}`);
         }
       } catch (error) {
