@@ -24,26 +24,49 @@ export default function SeniorProfessionalTemplate({ resume, className = "" }: T
     >
       {/* Header */}
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">{basics.name || "Your Name"}</h1>
-        {basics.label && <p className="text-lg text-gray-800 mt-1">{basics.label}</p>}
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-base text-gray-700">
+        <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+          {basics.name || "Your Name"}
+        </h1>
+        {basics.label && (
+          <p className="text-base text-gray-500 mt-0.5 font-medium">{basics.label}</p>
+        )}
+
+        {/* Contact Line */}
+        <div className="flex flex-wrap items-center gap-x-3 mt-3 text-sm text-gray-700">
           {basics.email && <span>{basics.email}</span>}
-          {basics.phone && <span>|</span>}
-          {basics.phone && <span>{basics.phone}</span>}
-          {basics.location?.city && <span>|</span>}
-          {basics.location?.city && (
-            <span>
-              {basics.location.city}
-              {basics.location.region && `, ${basics.location.region}`}
-            </span>
+          {basics.phone && (
+            <>
+              <span className="text-gray-400">|</span>
+              <span>{basics.phone}</span>
+            </>
           )}
-          {basics.profiles.map((profile) => (
-            <span key={profile.network} className="text-sky-600">
-              | {profile.url || `${profile.network}: ${profile.username}`}
-            </span>
-          ))}
+          {basics.location?.city && (
+            <>
+              <span className="text-gray-400">|</span>
+              <span>
+                {basics.location.city}
+                {basics.location.region && `, ${basics.location.region}`}
+              </span>
+            </>
+          )}
         </div>
-        <div className="w-full h-0.5 bg-gradient-to-r from-sky-500 to-transparent mt-4"></div>
+
+        {/* Links & Profiles Line */}
+        {(basics.url || basics.profiles.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-3 mt-1 text-sm">
+            {basics.url && <span className="text-sky-600">{basics.url}</span>}
+            {basics.profiles.map((profile, idx) => (
+              <span key={profile.network} className="flex items-center gap-x-3">
+                {(idx > 0 || basics.url) && <span className="text-gray-400">|</span>}
+                <span className="text-sky-600">
+                  {profile.url || `${profile.network}: ${profile.username}`}
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className="w-full h-0.5 bg-gradient-to-r from-sky-500 to-transparent mt-4" />
       </header>
 
       {/* Summary */}

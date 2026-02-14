@@ -21,17 +21,38 @@ export default function MedicalProfessionalTemplate({ resume, className = "" }: 
     <div className={`bg-white min-h-[297mm] w-[210mm] mx-auto ${className}`} style={{ fontFamily }}>
       {/* Header with blue accent */}
       <header className="bg-sky-700 text-white px-8 py-5">
-        <div className="flex items-end justify-between">
+        <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{basics.name || "Your Name"}</h1>
-            {basics.label && <p className="text-sky-200 mt-0.5">{basics.label}</p>}
+            <h1 className="text-2xl font-bold tracking-tight leading-tight">
+              {basics.name || "Your Name"}
+            </h1>
+            {basics.label && (
+              <p className="text-sky-100 text-base font-medium mt-0.5">{basics.label}</p>
+            )}
           </div>
-          <div className="text-right text-base text-sky-50">
+          <div className="text-right text-sm text-sky-50 space-y-0.5 mt-0.5">
             {basics.email && <p>{basics.email}</p>}
             {basics.phone && <p>{basics.phone}</p>}
-            {basics.location?.city && <p>{basics.location.city}</p>}
+            {basics.location?.city && (
+              <p>
+                {basics.location.city}
+                {basics.location.region && `, ${basics.location.region}`}
+              </p>
+            )}
           </div>
         </div>
+        {/* Profiles / Links row */}
+        {(basics.url || basics.profiles.length > 0) && (
+          <div className="flex flex-wrap items-center gap-x-3 mt-2.5 pt-2 border-t border-sky-500/40 text-sm text-sky-100">
+            {basics.url && <span>{basics.url}</span>}
+            {basics.profiles.map((profile, idx) => (
+              <span key={profile.network} className="flex items-center gap-x-3">
+                {(idx > 0 || basics.url) && <span className="text-sky-300/60">|</span>}
+                <span>{profile.url || `${profile.network}: ${profile.username}`}</span>
+              </span>
+            ))}
+          </div>
+        )}
       </header>
 
       <div className="p-8">

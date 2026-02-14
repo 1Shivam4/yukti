@@ -27,8 +27,8 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
       <aside className="w-[35%] bg-gradient-to-b from-purple-600 to-purple-800 text-white p-6">
         {/* Profile Section */}
         <div className="text-center mb-6">
-          <div className="w-24 h-24 rounded-full bg-white/20 mx-auto mb-4 flex items-center justify-center">
-            <span className="text-3xl font-bold">
+          <div className="w-24 h-24 rounded-full bg-white/20 mx-auto mb-4 flex items-center justify-center ring-2 ring-white/30">
+            <span className="text-3xl font-bold text-white">
               {basics.name
                 ?.split(" ")
                 .map((n) => n[0])
@@ -36,38 +36,43 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
             </span>
           </div>
           <h1 className="text-xl font-bold">{basics.name || "Your Name"}</h1>
-          {basics.label && <p className="text-purple-100 text-base mt-1">{basics.label}</p>}
+          {basics.label && (
+            <p className="text-purple-200 text-sm mt-1 font-medium">{basics.label}</p>
+          )}
         </div>
 
         {/* Contact */}
         <section className="mb-6">
-          <h2 className="text-xs font-bold uppercase tracking-widest border-b border-purple-400 pb-1 mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-purple-200 border-b border-purple-400/50 pb-1 mb-3">
             Contact
           </h2>
-          <div className="space-y-2 text-base">
+          <div className="space-y-2 text-sm">
             {basics.email && (
-              <p className="flex items-center gap-2">
-                <span className="text-purple-300">✉</span>
-                {basics.email}
-              </p>
+              <div className="flex items-start gap-2">
+                <span className="text-purple-300 shrink-0">✉</span>
+                <span className="text-white break-all">{basics.email}</span>
+              </div>
             )}
             {basics.phone && (
-              <p className="flex items-center gap-2">
-                <span className="text-purple-300">☎</span>
-                {basics.phone}
-              </p>
+              <div className="flex items-start gap-2">
+                <span className="text-purple-300 shrink-0">☎</span>
+                <span className="text-white">{basics.phone}</span>
+              </div>
             )}
             {basics.location?.city && (
-              <p className="flex items-center gap-2">
-                <span className="text-purple-300">📍</span>
-                {basics.location.city}
-              </p>
+              <div className="flex items-start gap-2">
+                <span className="text-purple-300 shrink-0">📍</span>
+                <span className="text-white">
+                  {basics.location.city}
+                  {basics.location.region && `, ${basics.location.region}`}
+                </span>
+              </div>
             )}
             {basics.url && (
-              <p className="flex items-center gap-2">
-                <span className="text-purple-300">🌐</span>
-                {basics.url}
-              </p>
+              <div className="flex items-start gap-2">
+                <span className="text-purple-300 shrink-0">🔗</span>
+                <span className="text-white break-all">{basics.url}</span>
+              </div>
             )}
           </div>
         </section>
@@ -75,17 +80,20 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
         {/* Skills */}
         {skills.length > 0 && (
           <section className="mb-6">
-            <h2 className="text-xs font-bold uppercase tracking-widest border-b border-purple-400 pb-1 mb-3">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-purple-200 border-b border-purple-400/50 pb-1 mb-3">
               Skills
             </h2>
             <div className="space-y-3">
               {skills.map((skill, idx) => (
                 <div key={idx}>
-                  <h3 className="text-base font-medium">{skill.name}</h3>
+                  <h3 className="text-sm font-semibold text-white">{skill.name}</h3>
                   {skill.keywords.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="flex flex-wrap gap-1 mt-1.5">
                       {skill.keywords.map((kw, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-white/20 rounded text-sm">
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 bg-white/20 rounded text-xs text-white"
+                        >
                           {kw}
                         </span>
                       ))}
@@ -100,15 +108,15 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
         {/* Education */}
         {education.length > 0 && (
           <section className="mb-6">
-            <h2 className="text-xs font-bold uppercase tracking-widest border-b border-purple-400 pb-1 mb-3">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-purple-200 border-b border-purple-400/50 pb-1 mb-3">
               Education
             </h2>
             <div className="space-y-3">
               {education.map((edu, idx) => (
-                <div key={idx} className="text-base">
-                  <h3 className="font-medium">{edu.studyType}</h3>
-                  <p className="text-purple-100 text-sm">{edu.institution}</p>
-                  <p className="text-purple-200 text-sm">{edu.endDate || edu.startDate}</p>
+                <div key={idx}>
+                  <h3 className="text-sm font-semibold text-white">{edu.studyType}</h3>
+                  <p className="text-purple-200 text-xs">{edu.institution}</p>
+                  <p className="text-purple-300 text-xs">{edu.endDate || edu.startDate}</p>
                 </div>
               ))}
             </div>
@@ -118,14 +126,15 @@ export default function DesignerPortfolioTemplate({ resume, className = "" }: Te
         {/* Social Links */}
         {basics.profiles.length > 0 && (
           <section>
-            <h2 className="text-xs font-bold uppercase tracking-widest border-b border-purple-400 pb-1 mb-3">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-purple-200 border-b border-purple-400/50 pb-1 mb-3">
               Online
             </h2>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {basics.profiles.map((profile) => (
-                <p key={profile.network} className="text-base text-purple-100">
-                  {profile.network}: {profile.username}
-                </p>
+                <div key={profile.network} className="flex items-center gap-2 text-sm">
+                  <span className="text-purple-300 font-medium">{profile.network}:</span>
+                  <span className="text-white break-all">{profile.username}</span>
+                </div>
               ))}
             </div>
           </section>

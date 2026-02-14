@@ -24,25 +24,44 @@ export default function ExecutiveClassicTemplate({ resume, className = "" }: Tem
       style={{ fontFamily }}
     >
       {/* Header - Centered */}
-      <header className="text-center border-b-2 border-gray-800 pb-4 mb-6">
-        <h1 className="text-3xl font-bold tracking-wide text-gray-900 uppercase">
+      <header className="text-center border-b-2 border-gray-800 pb-5 mb-6">
+        <h1 className="text-3xl font-bold tracking-widest text-gray-900 uppercase">
           {basics.name || "Your Name"}
         </h1>
-        {basics.label && <p className="text-lg text-gray-800 mt-1 italic">{basics.label}</p>}
-        <div className="flex justify-center flex-wrap gap-x-3 mt-3 text-base text-gray-700">
+        {basics.label && <p className="text-base text-gray-600 mt-1 italic">{basics.label}</p>}
+
+        {/* Contact Line */}
+        <div className="flex justify-center flex-wrap items-center gap-x-3 mt-3 text-sm text-gray-700">
           {basics.email && <span>{basics.email}</span>}
-          {basics.phone && <span>|</span>}
-          {basics.phone && <span>{basics.phone}</span>}
-          {basics.location?.city && <span>|</span>}
-          {basics.location?.city && <span>{basics.location.city}</span>}
-          {basics.profiles.length > 0 && <span>|</span>}
-          {basics.profiles.map((profile, idx) => (
-            <span key={profile.network}>
-              {idx > 0 && " | "}
-              {profile.url || `${profile.network}: ${profile.username}`}
-            </span>
-          ))}
+          {basics.phone && (
+            <>
+              <span className="text-gray-400">|</span>
+              <span>{basics.phone}</span>
+            </>
+          )}
+          {basics.location?.city && (
+            <>
+              <span className="text-gray-400">|</span>
+              <span>
+                {basics.location.city}
+                {basics.location.region && `, ${basics.location.region}`}
+              </span>
+            </>
+          )}
         </div>
+
+        {/* Links & Profiles Line */}
+        {(basics.url || basics.profiles.length > 0) && (
+          <div className="flex justify-center flex-wrap items-center gap-x-3 mt-1.5 text-sm text-gray-500">
+            {basics.url && <span>{basics.url}</span>}
+            {basics.profiles.map((profile, idx) => (
+              <span key={profile.network} className="flex items-center gap-x-3">
+                {(idx > 0 || basics.url) && <span className="text-gray-400">|</span>}
+                <span>{profile.url || `${profile.network}: ${profile.username}`}</span>
+              </span>
+            ))}
+          </div>
+        )}
       </header>
 
       {/* Executive Summary */}
