@@ -37,43 +37,58 @@ export async function exportToPdf(
   const html2canvas = await loadHtml2Canvas();
   const jsPDF = await loadJsPDF();
 
-  // Capture the element as canvas
+  // Capture the element as canvas with optimized settings for quality
   const canvas = await html2canvas(element, {
-    scale: 2, // Higher quality
+    scale: 2, // Higher quality for crisp text
     useCORS: true,
     logging: false,
     backgroundColor: "#ffffff",
+    removeContainer: true,
   });
 
   // A4 dimensions in mm
   const a4Width = 210;
   const a4Height = 297;
 
-  // Calculate dimensions maintaining aspect ratio
-  const imgWidth = a4Width;
-  const imgHeight = (canvas.height * a4Width) / canvas.width;
+  // Margins: 3rem (~11.3mm) top/bottom, 1.5rem (~5.6mm) left/right
+  const marginTop = 11.3;
+  const marginBottom = 11.3;
+  const marginLeft = 5.6;
+  const marginRight = 5.6;
 
-  // Create PDF
+  // Calculate usable area
+  const usableWidth = a4Width - marginLeft - marginRight;
+  const usableHeight = a4Height - marginTop - marginBottom;
+
+  // Calculate dimensions maintaining aspect ratio
+  const imgWidth = usableWidth;
+  const imgHeight = (canvas.height * usableWidth) / canvas.width;
+
+  // Create PDF with compression
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "mm",
     format: "a4",
+    compress: true,
   });
 
-  const imgData = canvas.toDataURL("image/png");
+  // Convert to JPEG with high quality (92% for sharp text, reasonable file size)
+  const imgData = canvas.toDataURL("image/jpeg", 0.92);
 
   // Handle multi-page if content is longer than one page
   let heightLeft = imgHeight;
   let position = 0;
 
-  pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-  heightLeft -= a4Height;
+  // Add first page with margins
+  pdf.addImage(imgData, "JPEG", marginLeft, marginTop + position, imgWidth, imgHeight);
+  heightLeft -= usableHeight;
 
   while (heightLeft > 0) {
-    position = heightLeft - imgHeight;
+    position -= usableHeight;
     pdf.addPage();
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= a4Height;
+    // Add subsequent pages with same margins
+    pdf.addImage(imgData, "JPEG", marginLeft, marginTop + position, imgWidth, imgHeight);
+    heightLeft -= usableHeight;
   }
 
   pdf.save(filename);

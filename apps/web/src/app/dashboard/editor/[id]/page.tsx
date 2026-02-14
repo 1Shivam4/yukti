@@ -313,7 +313,9 @@ export default function EditorPage() {
           </div>
           <div className="max-w-[210mm] mx-auto shadow-xl border border-gray-200/60 rounded bg-white">
             <div id="resume-preview-container">
-              <TemplateRenderer resume={resume} templateId={templateId} scale={0.75} />
+              <div id="resume-preview">
+                <TemplateRenderer resume={resume} templateId={templateId} />
+              </div>
             </div>
           </div>
         </div>

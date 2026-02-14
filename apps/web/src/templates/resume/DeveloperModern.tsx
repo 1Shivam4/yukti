@@ -19,6 +19,55 @@ export default function DeveloperModernTemplate({ resume, className = "" }: Temp
 
   return (
     <div className={`bg-white min-h-[297mm] w-[210mm] mx-auto ${className}`} style={{ fontFamily }}>
+      {/* Print-specific styles */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4;
+            margin: 12mm 6mm;
+          }
+          
+          body {
+            margin: 0;
+            padding: 0;
+          }
+          
+          /* Prevent content from splitting across pages */
+          section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          /* Prevent work experience items from splitting */
+          section > div > div {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          /* Prevent list items from splitting */
+          li {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          /* Control page breaks between sections */
+          section {
+            page-break-after: auto;
+          }
+          
+          /* Avoid breaks after headers */
+          h2, h3 {
+            page-break-after: avoid;
+            break-after: avoid;
+          }
+          
+          /* Remove box shadows and borders for print */
+          * {
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
+
       {/* Header - Centered */}
       <header className="text-center px-8 pt-6 pb-4">
         {/* Name - Large, Bold, Centered */}
